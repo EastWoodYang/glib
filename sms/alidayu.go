@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 )
@@ -72,7 +73,7 @@ type alidayuSms struct {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 创建阿里大鱼短信结构
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func NewAlidayunSms(appKey, appSecret, signName string) *aliyunSms {
+func NewAlidayunSms(appKey, appSecret, signName string) *alidayuSms {
 	dayuSms := new(alidayuSms)
 	dayuSms.AppKey = appKey
 	dayuSms.AppSecret = appSecret
@@ -211,7 +212,7 @@ func (s *alidayuSms) Sign(params map[string]string) string {
 
 	//Md5签名（在拼接的字符串头尾附加上api密匙，然后md5，md5串是大写）
 	paramString = fmt.Sprintf("%s%s%s", s.AppSecret, paramString, s.AppSecret)
-	sign := Md5(paramString)
+	sign := glib.Md5(paramString)
 
 	return strings.ToUpper(sign)
 }
@@ -219,7 +220,7 @@ func (s *alidayuSms) Sign(params map[string]string) string {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取参数字典
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *alidayuSms) toDict() {
+func (s *alidayuSms) toDict() map[string]string {
 	var params map[string]string = make(map[string]string, 0)
 	params["app_key"] = s.AppKey
 	params["method"] = s.Method
