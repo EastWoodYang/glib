@@ -992,7 +992,7 @@ func GetModelKey(model interface{}, prefixKey, fieldName string) string {
 	}
 
 	fieldValue := valueElem.FieldByName(fieldName).Uint()
-	modelKey = fmt.Sprintf("%s||%s||%d", prefixKey, pkgName, fieldValue)
+	modelKey = fmt.Sprintf("%s|%s|%d", prefixKey, pkgName, fieldValue)
 	modelKey = strings.ToLower(modelKey)
 
 	return modelKey
