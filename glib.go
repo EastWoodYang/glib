@@ -3,6 +3,7 @@ package glib
 import (
 	"bufio"
 	"bytes"
+	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/des"
@@ -22,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"net/url"
 	"reflect"
 	"regexp"
 	"sort"
@@ -1015,15 +1017,6 @@ func Sha1(data string) string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Sha1哈希
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func Sha256(data string) string {
-	t := sha256.New()
-	io.WriteString(t, data)
-	return fmt.Sprintf("%x", t.Sum(nil))
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Hmac Sha1哈希
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func HmacSha1(data string, key string, args ...bool) string {
@@ -1044,6 +1037,83 @@ func HmacSha1(data string, key string, args ...bool) string {
 		resultString = string(mac.Sum(nil))
 	}
 	return resultString
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Sha1哈希
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Sha256(data string) string {
+	t := sha256.New()
+	io.WriteString(t, data)
+	return fmt.Sprintf("%x", t.Sum(nil))
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Sha256WithRsa签名
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Sha256WithRsa(data string, privateKey string) (string, error) {
+	//key to pem
+	privateKey = RsaPrivateToMultipleLine(privateKey)
+
+	//RSA密匙
+	block, _ := pem.Decode([]byte(privateKey))
+	if block == nil {
+		return "", errors.New("sign private key decode error")
+	}
+
+	prk8, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return "", err
+	}
+
+	//SHA256哈希
+	h := sha256.New()
+	h.Write([]byte(data))
+	digest := h.Sum(nil)
+
+	//RSA签名
+	rsaPrivateKey := prk8.(*rsa.PrivateKey)
+	s, err := rsa.SignPKCS1v15(nil, rsaPrivateKey, crypto.SHA256, []byte(digest))
+	if err != nil {
+		return "", err
+	}
+	sign := base64.StdEncoding.EncodeToString(s)
+	return string(sign), nil
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Sha256WithRsa验签
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Sha256WithRsaVerify(data, sign, publicKey string) (bool, error) {
+	// publickey to pem
+	publicKey = RsaPublicToMultipleLine(publicKey)
+
+	// 加载RSA的公钥
+	block, _ := pem.Decode([]byte(publicKey))
+	if block == nil {
+		return false, errors.New("sign public key decode error")
+	}
+
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return false, err
+	}
+	rsaPublicKey, _ := pub.(*rsa.PublicKey)
+
+	h := sha256.New()
+	h.Write([]byte(data))
+	digest := h.Sum(nil)
+
+	// base64 decode,支付宝对返回的签名做过base64 encode必须要反过来decode才能通过验证
+	signString, _ := base64.StdEncoding.DecodeString(sign)
+	hex.EncodeToString(signString)
+
+	// 调用rsa包的VerifyPKCS1v15验证签名有效性
+	if err = rsa.VerifyPKCS1v15(rsaPublicKey, crypto.SHA256, digest, signString); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 /*
@@ -1200,6 +1270,102 @@ func GenRsaKey(bits int) (string, string, error) {
 		return "", "", err
 	}
 	return privateBuffer.String(), publicBuffer.String(), nil
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 将单行的Ras Public Pem字符串格式化为多行格式
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func RsaPublicToMultipleLine(privateKey string) string {
+	privateKeys := make([]string, 0)
+	privateKeys = append(privateKeys, "-----BEGIN PUBLIC KEY-----")
+
+	for i := 0; i < 4; i++ {
+		start := i * 64
+		end := (i + 1) * 64
+		lineKey := ""
+		if i == 3 {
+			lineKey = privateKey[start:]
+		} else {
+			lineKey = privateKey[start:end]
+		}
+		privateKeys = append(privateKeys, lineKey)
+	}
+
+	privateKeys = append(privateKeys, "-----END PUBLIC KEY-----")
+	privateKey = strings.Join(privateKeys, "\r\n")
+
+	return privateKey
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 将单行的Rsa Private Pem字符串格式化为多行格式
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func RsaPrivateToMultipleLine(privateKey string) string {
+	privateKeys := make([]string, 0)
+	privateKeys = append(privateKeys, "-----BEGIN PRIVATE KEY-----")
+
+	for i := 0; i < 26; i++ {
+		start := i * 64
+		end := (i + 1) * 64
+		lineKey := ""
+		if i == 25 {
+			lineKey = privateKey[start:]
+		} else {
+			lineKey = privateKey[start:end]
+		}
+		privateKeys = append(privateKeys, lineKey)
+	}
+
+	privateKeys = append(privateKeys, "-----END PRIVATE KEY-----")
+	privateKey = strings.Join(privateKeys, "\r\n")
+
+	return privateKey
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字典参数升序排序，组成键＝值集合，然后把集合用&拼接成字符串
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func JoinMapToString(params map[string]string, filterKeys []string, isEscape bool) string {
+	var keys []string = make([]string, 0)
+	var values []string = make([]string, 0)
+
+	filterKeyMaps := make(map[string]string, 0)
+	if len(filterKeys) > 0 {
+		for _, key := range filterKeys {
+			filterKeyMaps[key] = key
+		}
+	}
+
+	//请求参数排序（字母升序）
+	for key := range params {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	//拼接KeyValue字符串
+	for _, key := range keys {
+		//过滤空值
+		if len(params[key]) > 0 {
+			//过滤指定的key
+			if _, isExists := filterKeyMaps[key]; isExists {
+				continue
+			}
+
+			keyValue := params[key]
+			if isEscape {
+				keyValue = url.QueryEscape(keyValue)
+			}
+
+			//键＝值集合
+			value := fmt.Sprintf("%s=%s", key, keyValue)
+			values = append(values, value)
+		}
+	}
+
+	//用&连接起来
+	paramString := strings.Join(values, "&")
+
+	return paramString
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
