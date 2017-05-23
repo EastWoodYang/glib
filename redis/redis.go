@@ -2,7 +2,6 @@ package redis
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -19,34 +18,46 @@ import (
  * Redis操作模块
  * author: mliu
  * ================================================================================ */
-var redisPool *redis_go.Pool
-
-func init() {
-}
+type (
+	redisClient struct {
+		prefixKey string
+		pool      *redis_go.Pool
+	}
+)
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 设置配置参数
+ * 获取RedisClient实例
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func SetConfig(host string, port int, password string) {
+func NewRedisClient(host string, port int, password string, timeout uint64) *redisClient {
+	client := new(redisClient)
 	hostAddr := fmt.Sprintf("%s:%d", host, port)
-	redisPool = newRedisPool(hostAddr, password, 15)
+	client.pool = newRedisPool(hostAddr, password, timeout)
+
+	return client
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Run Command
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func Do(commandName string, args ...interface{}) (interface{}, error) {
-	redisClient := redisPool.Get()
-	defer redisClient.Close()
+func (s *redisClient) SetPrefixKey(prefixKey string) {
+	s.prefixKey = prefixKey
+}
 
-	return redisClient.Do(commandName, args...)
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Run Command
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *redisClient) Do(commandName string, args ...interface{}) (interface{}, error) {
+	redisPool := s.pool.Get()
+	defer redisPool.Close()
+
+	return redisPool.Do(commandName, args...)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 设置数据
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func SetData(structData interface{}, args ...interface{}) error {
-	key := GetModelCacheKey(structData)
+func (s *redisClient) SetData(structData interface{}, args ...interface{}) error {
+	key := s.getModelCacheKey(structData)
 	var time int = 5 * 60
 
 	if len(args) == 1 {
@@ -62,7 +73,7 @@ func SetData(structData interface{}, args ...interface{}) error {
 	if jsonString, err := glib.ToJson(structData); err != nil {
 		return err
 	} else if len(jsonString) > 0 {
-		if err := StringSet(key, jsonString, time); err != nil {
+		if err := s.StringSet(key, jsonString, time); err != nil {
 			return err
 		}
 	}
@@ -73,14 +84,14 @@ func SetData(structData interface{}, args ...interface{}) error {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取数据
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetData(structData interface{}, args ...interface{}) error {
-	key := GetModelCacheKey(structData)
+func (s *redisClient) GetData(structData interface{}, args ...interface{}) error {
+	key := s.getModelCacheKey(structData)
 
 	if len(args) == 1 {
 		key = string(args[0])
 	}
 
-	if jsonString, err := StringGet(key); err != nil {
+	if jsonString, err := s.StringGet(key); err != nil {
 		return err
 	} else {
 		if err := glib.FromJson(jsonString, &structData); err != nil {
@@ -93,8 +104,8 @@ func GetData(structData interface{}, args ...interface{}) error {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * String SET 包装
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func StringSet(args ...interface{}) error {
-	if _, err := Do("SET", args...); err != nil {
+func (s *redisClient) StringSet(args ...interface{}) error {
+	if _, err := s.Do("SET", args...); err != nil {
 		return err
 	}
 	return nil
@@ -103,9 +114,9 @@ func StringSet(args ...interface{}) error {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * String GET 包装
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func StringGet(key string) (string, error) {
+func (s *redisClient) StringGet(key string) (string, error) {
 	resultString := ""
-	if value, err := String(Do("GET", key)); err != nil {
+	if value, err := s.String(s.Do("GET", key)); err != nil {
 		return "", err
 	} else {
 		resultString = value
@@ -117,8 +128,8 @@ func StringGet(key string) (string, error) {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Hash HMSET包装
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func HashSet(structData interface{}, args ...interface{}) error {
-	key := GetModelCacheKey(structData)
+func (s *redisClient) HashSet(structData interface{}, args ...interface{}) error {
+	key := s.getModelCacheKey(structData)
 	var time int = 5 * 60
 
 	if len(args) == 1 {
@@ -131,7 +142,7 @@ func HashSet(structData interface{}, args ...interface{}) error {
 		}
 	}
 
-	if _, err := Do("HMSET", redis_go.Args{}.Add(key).AddFlat(structData)...); err != nil {
+	if _, err := s.Do("HMSET", redis_go.Args{}.Add(key).AddFlat(structData)...); err != nil {
 		return err
 	}
 	return nil
@@ -140,13 +151,13 @@ func HashSet(structData interface{}, args ...interface{}) error {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Hash HGETALL包装
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func HashGet(structObject interface{}, args ...interface{}) error {
-	key := GetModelCacheKey(structData)
+func (s *redisClient) HashGet(structObject interface{}, args ...interface{}) error {
+	key := s.getModelCacheKey(structData)
 	if len(args) == 1 {
 		key = string(args[0])
 	}
 
-	data, err := redis_go.Values(Do("HGETALL", key))
+	data, err := redis_go.Values(s.Do("HGETALL", key))
 	if err != nil {
 		return err
 	}
@@ -161,113 +172,94 @@ func HashGet(structObject interface{}, args ...interface{}) error {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * redigo帮助方法包装
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func Bool(reply interface{}, err error) (bool, error) {
+func (s *redisClient) Bool(reply interface{}, err error) (bool, error) {
 	return redis_go.Bool(reply, err)
 }
 
-func ByteSlices(reply interface{}, err error) ([][]byte, error) {
+func (s *redisClient) ByteSlices(reply interface{}, err error) ([][]byte, error) {
 	return redis_go.ByteSlices(reply, err)
 }
 
-func Bytes(reply interface{}, err error) ([]byte, error) {
+func (s *redisClient) Bytes(reply interface{}, err error) ([]byte, error) {
 	return redis_go.Bytes(reply, err)
 }
 
-func Float64(reply interface{}, err error) (float64, error) {
+func (s *redisClient) Float64(reply interface{}, err error) (float64, error) {
 	return redis_go.Float64(reply, err)
 }
 
-func Int(reply interface{}, err error) (int, error) {
+func (s *redisClient) Int(reply interface{}, err error) (int, error) {
 	return redis_go.Int(reply, err)
 }
 
-func Int64(reply interface{}, err error) (int64, error) {
+func (s *redisClient) Int64(reply interface{}, err error) (int64, error) {
 	return redis_go.Int64(reply, err)
 }
 
-func Int64Map(result interface{}, err error) (map[string]int64, error) {
+func (s *redisClient) Int64Map(result interface{}, err error) (map[string]int64, error) {
 	return redis_go.Int64Map(result, err)
 }
 
-func IntMap(result interface{}, err error) (map[string]int, error) {
+func (s *redisClient) IntMap(result interface{}, err error) (map[string]int, error) {
 	return redis_go.IntMap(result, err)
 }
 
-func Ints(reply interface{}, err error) ([]int, error) {
+func (s *redisClient) Ints(reply interface{}, err error) ([]int, error) {
 	return redis_go.Ints(reply, err)
 }
 
-func MultiBulk(reply interface{}, err error) ([]interface{}, error) {
+func (s *redisClient) MultiBulk(reply interface{}, err error) ([]interface{}, error) {
 	return redis_go.MultiBulk(reply, err)
 }
 
-func Scan(src []interface{}, dest ...interface{}) ([]interface{}, error) {
+func (s *redisClient) Scan(src []interface{}, dest ...interface{}) ([]interface{}, error) {
 	return redis_go.Scan(src, dest...)
 }
 
-func ScanSlice(src []interface{}, dest interface{}, fieldNames ...string) error {
+func (s *redisClient) ScanSlice(src []interface{}, dest interface{}, fieldNames ...string) error {
 	return redis_go.ScanSlice(src, dest)
 }
 
-func ScanStruct(src []interface{}, dest interface{}) error {
+func (s *redisClient) ScanStruct(src []interface{}, dest interface{}) error {
 	return redis_go.ScanStruct(src, dest)
 }
 
-func String(reply interface{}, err error) (string, error) {
+func (s *redisClient) String(reply interface{}, err error) (string, error) {
 	return redis_go.String(reply, err)
 }
 
-func StringMap(result interface{}, err error) (map[string]string, error) {
+func (s *redisClient) StringMap(result interface{}, err error) (map[string]string, error) {
 	return redis_go.StringMap(result, err)
 }
 
-func Strings(reply interface{}, err error) ([]string, error) {
+func (s *redisClient) Strings(reply interface{}, err error) ([]string, error) {
 	return redis_go.Strings(reply, err)
 }
 
-func Uint64(reply interface{}, err error) (uint64, error) {
+func (s *redisClient) Uint64(reply interface{}, err error) (uint64, error) {
 	return redis_go.Uint64(reply, err)
 }
 
-func Values(reply interface{}, err error) ([]interface{}, error) {
+func (s *redisClient) Values(reply interface{}, err error) ([]interface{}, error) {
 	return redis_go.Values(reply, err)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 获取数据模型的缓存key
+ * 链接 Redis 服务器
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetModelCacheKey(model interface{}) string {
-	typeOf := reflect.TypeOf(model)
-	valueOf := reflect.ValueOf(model)
-	valueElem := valueOf.Elem()
-
-	if kind := typeOf.Kind(); kind != reflect.Ptr {
-		panic("Model is not a pointer type")
-	}
-
-	cacheKey := ""
-	pkgName := strings.Split(valueElem.String(), " ")[0][1:]
-
-	if _, ok := valueElem.Type().FieldByName("Id"); !ok {
-		panic("Model does not contain Id field")
-	} else {
-		idValue := valueElem.FieldByName("Id").Uint()
-		cacheKey = fmt.Sprintf("%s||%s||%d", common.Settings.Redis.PrefixKey, pkgName, idValue)
-		cacheKey = strings.ToLower(cacheKey)
-	}
-
-	return cacheKey
+func (s *redisClient) getModelCacheKey(model interface{}) string {
+	return glib.GetModelKey(model, s.prefixKey, "Id")
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取 RedisPool
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func newRedisPool(address, password string, timeoutSeconds uint64) *redis_go.Pool {
+func newRedisPool(address, password string, timeout uint64) *redis_go.Pool {
 	return &redis_go.Pool{
 		MaxIdle:     8,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis_go.Conn, error) {
-			return dial(address, password)
+			return dial(address, password, timeout)
 		},
 		TestOnBorrow: func(conn redis_go.Conn, t time.Time) error {
 			_, err := conn.Do("PING")
@@ -279,13 +271,13 @@ func newRedisPool(address, password string, timeoutSeconds uint64) *redis_go.Poo
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 链接 Redis 服务器
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func dial(address, password string) (redis.Conn, error) {
+func dial(address, password string, timeout uint64) (redis.Conn, error) {
 	conn, err := redis_go.DialTimeout(
 		"tcp",
 		server,
-		time.Duration(timeoutSeconds)*time.Second,
-		time.Duration(timeoutSeconds)*time.Second,
-		time.Duration(timeoutSeconds)*time.Second,
+		time.Duration(timeout)*time.Second,
+		time.Duration(timeout)*time.Second,
+		time.Duration(timeout)*time.Second,
 	)
 	if err != nil {
 		return nil, err

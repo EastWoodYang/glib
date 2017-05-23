@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -963,6 +964,36 @@ func GetUrlParamValue(url, paramName string) string {
 	}
 
 	return paramValue
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取数据的缓存key
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetModelKey(model interface{}, prefixKey, fieldName string) string {
+	typeOf := reflect.TypeOf(model)
+	valueOf := reflect.ValueOf(model)
+	valueElem := valueOf.Elem()
+
+	if len(fieldName) == 0 {
+		fieldName = "Id"
+	}
+
+	if kind := typeOf.Kind(); kind != reflect.Ptr {
+		panic("Model is not a pointer type")
+	}
+
+	modelKey := ""
+	pkgName := strings.Split(valueElem.String(), " ")[0][1:]
+
+	if _, ok := valueElem.Type().FieldByName(fieldName); !ok {
+		panic("Model does not contain Id field")
+	}
+
+	fieldValue := valueElem.FieldByName(fieldName).Uint()
+	modelKey = fmt.Sprintf("%s||%s||%d", prefixKey, pkgName, fieldValue)
+	modelKey = strings.ToLower(modelKey)
+
+	return modelKey
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
