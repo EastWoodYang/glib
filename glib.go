@@ -1273,7 +1273,7 @@ func GenRsaKey(bits int) (string, string, error) {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 将单行的Ras Public Pem字符串格式化为多行格式
+ * 将单行的Ras Public字符串格式化为多行格式
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func RsaPublicToMultipleLine(privateKey string) string {
 	privateKeys := make([]string, 0)
@@ -1298,7 +1298,7 @@ func RsaPublicToMultipleLine(privateKey string) string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 将单行的Rsa Private Pem字符串格式化为多行格式
+ * 将单行的Rsa Private字符串格式化为多行格式
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func RsaPrivateToMultipleLine(privateKey string) string {
 	privateKeys := make([]string, 0)
