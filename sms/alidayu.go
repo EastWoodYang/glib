@@ -18,6 +18,22 @@ import (
  * author: mliu
  * ================================================================================ */
 type (
+	alidayuSms struct {
+		AppKey          string `form:"app_key" json:"app_key"`
+		AppSecret       string `form:"app_secret" json:"app_secret"`
+		Method          string `form:"method" json:"method"`
+		Format          string `form:"format" json:"format"`
+		RecNum          string `form:"rec_num" json:"rec_num"`
+		Simplify        string `form:"simplify" json:"simplify"`
+		SmsFreeSignName string `form:"sms_free_sign_name" json:"sms_free_sign_name"`
+		SmsTemplateCode string `form:"sms_template_code" json:"sms_template_code"`
+		SmsParam        string `form:"sms_param" json:"sms_param"`
+		SmsType         string `form:"sms_type" json:"sms_type"`
+		SignMethod      string `form:"sign_method" json:"sign_method"`
+		Timestamp       string `form:"timestamp" json:"timestamp"`
+		Version         string `form:"v" json:"v"`
+	}
+
 	AlidayuSmsTemplateParam struct {
 		Code    string `form:"code" json:"code"`
 		Product string `form:"product" json:"product"`
@@ -53,22 +69,6 @@ type (
 		RequestId string `form:"request_id" json:"request_id"`
 	}
 )
-
-type alidayuSms struct {
-	AppKey          string `form:"app_key" json:"app_key"`
-	AppSecret       string `form:"app_secret" json:"app_secret"`
-	Method          string `form:"method" json:"method"`
-	Format          string `form:"format" json:"format"`
-	RecNum          string `form:"rec_num" json:"rec_num"`
-	Simplify        string `form:"simplify" json:"simplify"`
-	SmsFreeSignName string `form:"sms_free_sign_name" json:"sms_free_sign_name"`
-	SmsTemplateCode string `form:"sms_template_code" json:"sms_template_code"`
-	SmsParam        string `form:"sms_param" json:"sms_param"`
-	SmsType         string `form:"sms_type" json:"sms_type"`
-	SignMethod      string `form:"sign_method" json:"sign_method"`
-	Timestamp       string `form:"timestamp" json:"timestamp"`
-	Version         string `form:"v" json:"v"`
-}
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 创建阿里大鱼短信结构
@@ -118,7 +118,9 @@ func (s *alidayuSms) Send(mobiles string) (*AlidayuSmsResult, error) {
 		result.Message = err.Error()
 		return result, err
 	} else {
+		//解析响应数据
 		if isSuccess := !strings.Contains(response, "error_response"); isSuccess {
+			//解析发送成功数据
 			successResponse := new(AlidayuSmsSendSuccessResponse)
 			glib.FromJson(response, successResponse)
 
@@ -128,6 +130,7 @@ func (s *alidayuSms) Send(mobiles string) (*AlidayuSmsResult, error) {
 			result.RequestId = successResponse.RequestId
 			result.IsSuccess = successResponse.Result.Success
 		} else {
+			//解析发送失败数据
 			errorResponse := new(AlidayuSmsSendErrorResponse)
 			glib.FromJson(response, errorResponse)
 

@@ -18,29 +18,31 @@ import (
  * 阿里云短信工具模块
  * author: mliu
  * ================================================================================ */
-type AliyunSmsTemplateParam struct {
-	Code    string `form:"code" json:"code"`
-	Product string `form:"product" json:"product"`
-}
+type (
+	aliyunSms struct {
+		Geteway          string `form:"Geteway" json:"Geteway"`                   //网关
+		Action           string `form:"Action" json:"Action"`                     //操作接口名，系统规定参数，取值：SingleSendSms
+		SignName         string `form:"SignName" json:"SignName"`                 //短信签名
+		TemplateCode     string `form:"TemplateCode" json:"TemplateCode"`         //短信模板的模板CODE（状态必须是验证通过）
+		RecNum           string `form:"RecNum" json:"RecNum"`                     //目标手机号，多个手机号可以逗号分隔
+		ParamString      string `form:"ParamString" json:"ParamString"`           //短信模板中的变量；数字需要转换为字符串
+		RegionId         string `form:"RegionId" json:"RegionId"`                 //区域ID
+		AccessKeyId      string `form:"AccessKeyId" json:"AccessKeyId"`           //access id
+		AccessKeySecret  string `form:"AccessKeySecret" json:"AccessKeySecret"`   //私匙
+		Signature        string `form:"Signature" json:"Signature"`               //签名结果串
+		SignatureNonce   string `form:"SignatureNonce" json:"SignatureNonce"`     //唯一随机数，用于防止网络重放攻击。用户在不同请求间要使用不同的随机数值
+		SignatureMethod  string `form:"SignatureMethod" json:"SignatureMethod"`   //签名方式，目前支持HMAC-SHA1
+		SignatureVersion string `form:"SignatureVersion" json:"SignatureVersion"` //签名算法版本，目前版本是1.0
+		Format           string `form:"Format" json:"Format"`                     //返回值的类型，支持JSON与XML。默认为XML
+		Timestamp        string `form:"Timestamp" json:"Timestamp"`               //请求的时间戳。日期格式按照ISO8601标准表示，并需要使用UTC时间。格式为YYYY-MM-DDThh:mm:ssZ 例如，2015-11-23T04:00:00Z（为北京时间2015年11月23日12点0分0秒）
+		Version          string `form:"Version" json:"Version"`                   //API版本号，为日期形式：YYYY-MM-DD，本版本对应为2016-09-27
+	}
 
-type aliyunSms struct {
-	Geteway          string `form:"Geteway" json:"Geteway"`                   //网关
-	Action           string `form:"Action" json:"Action"`                     //操作接口名，系统规定参数，取值：SingleSendSms
-	SignName         string `form:"SignName" json:"SignName"`                 //短信签名
-	TemplateCode     string `form:"TemplateCode" json:"TemplateCode"`         //短信模板的模板CODE（状态必须是验证通过）
-	RecNum           string `form:"RecNum" json:"RecNum"`                     //目标手机号，多个手机号可以逗号分隔
-	ParamString      string `form:"ParamString" json:"ParamString"`           //短信模板中的变量；数字需要转换为字符串
-	RegionId         string `form:"RegionId" json:"RegionId"`                 //区域ID
-	AccessKeyId      string `form:"AccessKeyId" json:"AccessKeyId"`           //access id
-	AccessKeySecret  string `form:"AccessKeySecret" json:"AccessKeySecret"`   //私匙
-	Signature        string `form:"Signature" json:"Signature"`               //签名结果串
-	SignatureNonce   string `form:"SignatureNonce" json:"SignatureNonce"`     //唯一随机数，用于防止网络重放攻击。用户在不同请求间要使用不同的随机数值
-	SignatureMethod  string `form:"SignatureMethod" json:"SignatureMethod"`   //签名方式，目前支持HMAC-SHA1
-	SignatureVersion string `form:"SignatureVersion" json:"SignatureVersion"` //签名算法版本，目前版本是1.0
-	Format           string `form:"Format" json:"Format"`                     //返回值的类型，支持JSON与XML。默认为XML
-	Timestamp        string `form:"Timestamp" json:"Timestamp"`               //请求的时间戳。日期格式按照ISO8601标准表示，并需要使用UTC时间。格式为YYYY-MM-DDThh:mm:ssZ 例如，2015-11-23T04:00:00Z（为北京时间2015年11月23日12点0分0秒）
-	Version          string `form:"Version" json:"Version"`                   //API版本号，为日期形式：YYYY-MM-DD，本版本对应为2016-09-27
-}
+	AliyunSmsTemplateParam struct {
+		Code    string `form:"code" json:"code"`
+		Product string `form:"product" json:"product"`
+	}
+)
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 创建阿里云短信结构
