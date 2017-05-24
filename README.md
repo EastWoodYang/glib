@@ -1,8 +1,15 @@
 # glib
 golang general library
 
----------------------------
-* common util
-* file util
-* http util
+GLib Common Api
+===========================
+
+* string
+* datetime
+* rand
+* regexp
+* file
+* http
+* security 
+* qr
 ---------------------------

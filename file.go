@@ -17,7 +17,7 @@ import (
 )
 
 /* ================================================================================
- * 文件模块
+ * 文件
  * qq group: 582452342
  * email   : 2091938785@qq.com
  * author  : 美丽的地球啊
@@ -27,8 +27,8 @@ type (
 	FileInfo     struct {
 		Filename string `form:"filename" json:"filename"` //原始文件名（test.jpg）
 		Size     int64  `form:"size" json:"size"`         //大小（单位：字节）
-		Duration int64  `form:"duration" json:"duration"` //持续时长（单位：秒）
-		Path     string `form:"path" json:"path"`         //存储全路径（本地磁盘或第三方文件系统）
+		Duration int64  `form:"duration" json:"duration"` //时长（单位：秒）
+		Path     string `form:"path" json:"path"`         //全路径（本地磁盘或第三方文件系统）
 	}
 
 	IFileSize interface {

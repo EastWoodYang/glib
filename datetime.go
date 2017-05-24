@@ -1,0 +1,323 @@
+package glib
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+)
+
+/* ================================================================================
+ * 日期
+ * qq group: 582452342
+ * email   : 2091938785@qq.com
+ * author  : 美丽的地球啊
+ * ================================================================================ */
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当前Unix时间戳
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func UnixTimestamp() int64 {
+	return time.Now().Unix()
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Unix日期（1970-01-01 00:00:00）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func UnixTimestampDate() time.Time {
+	dtTime := time.Date(1970, 1, 1, 0, 0, 0, 0, time.Local)
+	return dtTime
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Unix日期（0001-01-01 00:00:00）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func UnixDate2() time.Time {
+	dtTime, _ := StringToTime(time.UnixDate)
+	return dtTime
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 返回日期的最小日期时间（2016-01-02 00:00:00）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetMinDate(dtTime time.Time) time.Time {
+	year, month, day := dtTime.Date()
+	return time.Date(int(year), time.Month(month), int(day), 0, 0, 0, 0, time.Local)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 返回日期的最大日期时间（2016-01-02 59:59:59 999）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetMaxDate(dtTime time.Time) time.Time {
+	year, month, day := dtTime.Date()
+	return time.Date(int(year), time.Month(month), int(day), 59, 59, 59, 999, time.Local)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取日期时间的日期和星期字符串
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetDatetimeWeekString(datetime time.Time) string {
+	_, month, day := datetime.Date()
+	hour, minute, _ := datetime.Clock()
+	weekday := GetWeekWithDate(datetime)
+
+	weekdays := make(map[int]string, 0)
+	weekdays[1] = "星期一"
+	weekdays[2] = "星期二"
+	weekdays[3] = "星期三"
+	weekdays[4] = "星期四"
+	weekdays[5] = "星期五"
+	weekdays[6] = "星期六"
+	weekdays[7] = "星期日"
+	weekdayString := weekdays[weekday]
+
+	dateString := fmt.Sprintf("%d月%d日%s%d:%d", int(month), day, weekdayString, hour, minute)
+
+	return dateString
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 日期字符串切片转成日期
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringSliceToDate(dateStringSlice []string) (time.Time, error) {
+	dateString := strings.Join(dateStringSlice, "-")
+
+	dtTime, err := StringToTime(dateString)
+	if err != nil {
+		return UnixDate2(), err
+	}
+
+	return GetMinDate(dtTime), nil
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 日期转成日期字符串切片
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DateToStringSlice(date time.Time) []string {
+	if date.IsZero() {
+		date = time.Now()
+	}
+
+	dateStringSlice := make([]string, 0)
+	year, month, day := date.Date()
+
+	dateStringSlice = append(dateStringSlice, fmt.Sprintf("%d", year))
+	dateStringSlice = append(dateStringSlice, fmt.Sprintf("%d", int(month)))
+	dateStringSlice = append(dateStringSlice, fmt.Sprintf("%d", day))
+
+	return dateStringSlice
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * int切片转成日期
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func IntSliceToDate(intSlice []int) (time.Time, error) {
+	dateStringSlice := make([]string, 3)
+	for _, v := range intSlice {
+		dateStringSlice = append(dateStringSlice, fmt.Sprintf("%d", v))
+	}
+
+	dtTime, err := StringToTime(strings.Join(dateStringSlice, "-"))
+	if err != nil {
+		return UnixDate2(), err
+	}
+
+	return GetMinDate(dtTime), nil
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 日期转成int切片
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DateToIntSlice(date time.Time) []int {
+	intSlice := make([]int, 3)
+
+	dateStringSlice := DateToStringSlice(date)
+	intSlice[0], _ = strconv.Atoi(dateStringSlice[0])
+	intSlice[1], _ = strconv.Atoi(dateStringSlice[1])
+	intSlice[2], _ = strconv.Atoi(dateStringSlice[2])
+
+	return intSlice
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 日期时间增加指定的分钟数，返回日期时间
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DatetimeAddMinutes(datetime time.Time, minutes int) time.Time {
+	return datetime.Add(time.Duration(minutes) * time.Minute)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 时间字符串加指定的分钟数，返回时间字符串
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func TimeStringAddMinutes(timeString string, minutes int) string {
+	format := "15:04:05"
+
+	var timeValue time.Time
+	if time, err := time.Parse(format, timeString); err == nil {
+		timeValue = time
+	}
+
+	timeValue = timeValue.Add(time.Duration(minutes) * time.Minute)
+	return timeValue.Format(format)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 日期时间的日期部分和时间字符串连接，返回日期时间
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetDatetimeForDateAndTimeString(date time.Time, timeString string) time.Time {
+	format := "15:04:05"
+
+	var timeValue time.Time
+	if time, err := time.Parse(format, timeString); err == nil {
+		timeValue = time
+	}
+
+	y, m, d := date.Date()
+	h1, m1, s1 := timeValue.Clock()
+	datetime := time.Date(y, m, d, h1, m1, s1, 0, time.Local)
+	return datetime
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当前日期月份对应的天数
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentDayCount() int {
+	return GetDayCount(time.Now())
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取指定日期月份对应的天数
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetDayCount(datetime time.Time) int {
+	year, month, _ := datetime.Date()
+	dayCount := 31
+	if month == 4 || month == 6 || month == 9 || month == 11 {
+		dayCount = 30
+	} else if month == 2 {
+		if (year%4 == 0 && year%100 != 0) || (year%400 == 0) {
+			dayCount = 29
+		} else {
+			dayCount = 28
+		}
+	}
+
+	return dayCount
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当前日期是周几（1:周一｜2:周二｜...|7:周日）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentWeek() int {
+	nowDate := time.Now()
+	return GetWeekWithDate(nowDate)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取指定的日期是周几（1:周一｜2:周二｜...|7:周日）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetWeekWithDate(date time.Time) int {
+	nowDate := date
+	days := map[int]int{
+		1: 1,
+		2: 2,
+		3: 3,
+		4: 4,
+		5: 5,
+		6: 6,
+		0: 7,
+	}
+	weekday := nowDate.Weekday() //0：周日 | 1：周一 | .. ｜6：周六
+	weekdayValue := days[int(weekday)]
+
+	return weekdayValue
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当前周对应的月份里的日期范围（minDay in month, maxDay in month）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentWeekDayRange() (int, int) {
+	nowDate := time.Now()
+	_, _, day := nowDate.Date()
+	weekdayValue := GetCurrentWeek()
+	minDay := day - weekdayValue + 1
+	maxDay := day + 7 - weekdayValue
+
+	return minDay, maxDay
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取日期范围内的所属周几的日期集合
+ * week：从1开始，1表示周一，依次类推
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetDateRangeForWeekInDateRange(startDate, endDate time.Time, week int) []time.Time {
+	dateList := make([]time.Time, 0)
+	date := startDate
+
+	for date.Before(endDate) || date.Equal(endDate) {
+		weekValue := GetWeekWithDate(date)
+		if weekValue == week {
+			dateList = append(dateList, date)
+		}
+
+		date = date.AddDate(0, 0, 1)
+	}
+
+	return dateList
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取一段时间范围内指定间隔的时间段集合
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetTimeIntervalStringSlice(startDate, endDate time.Time, minutes int64) []string {
+	timeStringList := make([]string, 0)
+
+	date := startDate
+	for date.Before(endDate) || date.Equal(endDate) {
+		timeString := TimeToString(date, "15:04")
+		timeStringList = append(timeStringList, timeString)
+
+		date = date.Add(time.Duration(minutes) * time.Minute)
+	}
+
+	return timeStringList
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 分钟数转时间字符串（HH:mm:ss）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func MinutesToTimeString(minutes int64) string {
+	hoursPart := minutes / 60
+	minutesPart := minutes % 60
+
+	timeString := fmt.Sprintf("%02d:%02d:00", hoursPart, minutesPart)
+
+	return timeString
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 时间转字符串
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func TimeToString(timeValue time.Time, args ...interface{}) string {
+	format := "2006-01-02 15:04:05"
+	if len(args) == 1 {
+		if v, ok := args[0].(string); ok {
+			format = v
+		}
+	}
+	timeStrng := timeValue.Format(format)
+	return timeStrng
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串转时间
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringToTime(timeString string, args ...interface{}) (time.Time, error) {
+	format := "2006-01-02 15:04:05"
+	if len(args) == 1 {
+		if v, ok := args[0].(string); ok {
+			format = v
+		}
+	}
+
+	return time.ParseInLocation(format, timeString, time.Local)
+}
