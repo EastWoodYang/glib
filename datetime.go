@@ -153,7 +153,7 @@ func TimeStringAddMinutes(timeString string, minutes int) string {
 	format := "15:04:05"
 
 	var timeValue time.Time
-	if time, err := time.Parse(format, timeString); err == nil {
+	if time, err := time.ParseInLocation(format, timeString, time.Local); err == nil {
 		timeValue = time
 	}
 
@@ -168,7 +168,7 @@ func GetDatetimeForDateAndTimeString(date time.Time, timeString string) time.Tim
 	format := "15:04:05"
 
 	var timeValue time.Time
-	if time, err := time.Parse(format, timeString); err == nil {
+	if time, err := time.ParseInLocation(format, timeString, time.Local); err == nil {
 		timeValue = time
 	}
 
