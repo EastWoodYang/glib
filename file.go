@@ -328,6 +328,30 @@ func MoveFile(srcFilename, dstPath string, creationDate time.Time) (string, erro
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 删除文件
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DeleteFile(filename string, args ...string) error {
+	log.Printf("0 DeleteFile filename: %s", filename)
+
+	fullFilename := filename
+	if !filepath.IsAbs(filename) {
+		if len(args) > 0 {
+			filename = filepath.Join(args[0], filename)
+			log.Printf("1 DeleteFile filename: %s", filename)
+
+			fullFilename, _ = filepath.Abs(filename)
+
+			log.Printf("2 DeleteFile fullFilename: %s", fullFilename)
+		} else {
+			fullFilename, _ = filepath.Abs(filename)
+		}
+	}
+
+	//删除文件
+	return os.Remove(fullFilename)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 判断文件是否存在
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func FileIsExists(filename string) bool {

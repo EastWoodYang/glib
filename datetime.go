@@ -15,6 +15,13 @@ import (
  * ================================================================================ */
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当前日期时间
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetNow() time.Time {
+	return time.Now()
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前Unix时间戳
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func UnixTimestamp() int64 {
@@ -74,6 +81,55 @@ func GetDatetimeWeekString(datetime time.Time) string {
 	dateString := fmt.Sprintf("%d月%d日%s%d:%d", int(month), day, weekdayString, hour, minute)
 
 	return dateString
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取友好的日期时间字符串
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func TimeToFriendString(datetime time.Time) string {
+	result := TimeToString(datetime)
+	currentDate := time.Now()
+	year1, month1, day1 := currentDate.Date()
+	year2, month2, day2 := datetime.Date()
+
+	dayCount := 0
+	if year1 == year2 {
+		if month1 == month2 {
+			dayCount = day1 - day2
+			if dayCount == 0 {
+				hour := currentDate.Hour() - datetime.Hour()
+				if hour == 0 {
+					minutesCount := currentDate.Minute() - datetime.Minute()
+					if minutesCount == 0 {
+						result = "刚刚"
+					} else {
+						result = fmt.Sprintf("%d分钟前", minutesCount)
+					}
+				} else {
+					result = fmt.Sprintf("%d小时前", hour)
+				}
+			} else {
+				if dayCount > 14 {
+					result = "半个月前"
+				} else if dayCount > 6 {
+					result = "一周前"
+				} else {
+					result = fmt.Sprintf("%d天前", dayCount)
+				}
+			}
+		} else {
+			dayCount = int(currentDate.Sub(datetime).Seconds() / 86400)
+			if dayCount >= 90 && dayCount < 120 {
+				result = "3个月前"
+			} else if dayCount >= 60 && dayCount < 90 {
+				result = "2个月前"
+			} else if dayCount >= 30 && dayCount < 60 {
+				result = "1个月前"
+			}
+		}
+	}
+
+	return result
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
