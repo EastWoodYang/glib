@@ -86,8 +86,13 @@ func GetDatetimeWeekString(datetime time.Time) string {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取友好的日期时间字符串
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func TimeToFriendString(datetime time.Time) string {
-	result := TimeToString(datetime)
+func TimeToFriendString(datetime time.Time, args ...string) string {
+	format := "2006-01-02 15:04:05"
+	if len(args) > 0 {
+		format = args[0]
+	}
+
+	result := TimeToString(datetime, format)
 	currentDate := time.Now()
 	year1, month1, day1 := currentDate.Date()
 	year2, month2, day2 := datetime.Date()

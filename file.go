@@ -2,6 +2,7 @@ package glib
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -239,13 +240,17 @@ func SaveFile(data []byte, filename, basePath string, args ...string) (string, e
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 保存Http 上传的文件到磁盘指定目录（返回客户端原文件名，大小，全文件路径，错误）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func SaveHttpFile(req *http.Request, filename, basePath string, args ...string) (*FileInfo, error) {
+func SaveHttpFile(req *http.Request, filename, basePath string, maxSize int64, args ...string) (*FileInfo, error) {
 	inputFile, fileHeader, err := req.FormFile("file")
 	if err != nil {
 		return nil, err
 	}
 
 	size := inputFile.(IFileSize).Size()
+	if maxSize != 0 && size > maxSize {
+		return nil, errors.New("file is too large")
+	}
+
 	rootPath, _ := filepath.Abs(basePath)
 
 	if len(args) == 0 {
