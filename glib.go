@@ -182,8 +182,12 @@ func StringToIntSlice(sourceString string, args ...string) []int {
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func Uint64SliceToString(uintSlice []uint64, args ...string) string {
 	result := ""
-	joinString := ","
 
+	if len(uintSlice) == 0 {
+		return result
+	}
+
+	joinString := ","
 	if len(args) == 1 {
 		joinString = args[0]
 	}
@@ -235,6 +239,10 @@ func StringToStringSlice(sourceString string, args ...string) []string {
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func StringSliceToString(stringSlice []string, args ...string) string {
 	result := ""
+
+	if len(stringSlice) == 0 {
+		return result
+	}
 
 	joinString := ","
 	if len(args) == 1 {
