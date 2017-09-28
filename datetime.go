@@ -22,6 +22,30 @@ func GetNow() time.Time {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当前年份
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentYear() int32 {
+	year, _, _ := time.Now().Date()
+	return int32(year)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当前月份
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentMonth() int32 {
+	_, month, _ := time.Now().Date()
+	return int32(month)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当前日
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentDay() int32 {
+	_, _, day := time.Now().Date()
+	return int32(day)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前Unix时间戳
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func UnixTimestamp() int64 {
@@ -66,7 +90,7 @@ func GetMaxDate(dtTime time.Time) time.Time {
 func GetDatetimeWeekString(datetime time.Time) string {
 	_, month, day := datetime.Date()
 	hour, minute, _ := datetime.Clock()
-	weekday := GetWeekWithDate(datetime)
+	weekday := GetWeek(datetime)
 
 	weekdays := make(map[int]string, 0)
 	weekdays[1] = "星期一"
@@ -201,9 +225,16 @@ func DateToIntSlice(date time.Time) []int {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 日期时间增加指定的分钟数，返回日期时间
+ * 在当前的日期时间增加指定的分钟数，返回日期时间
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func DatetimeAddMinutes(datetime time.Time, minutes int) time.Time {
+func AddMinutesForCurrent(minutes int) time.Time {
+	return time.Now().Add(time.Duration(minutes) * time.Minute)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 在指定的日期时间增加指定的分钟数，返回日期时间
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func AddMinutesForDatetime(datetime time.Time, minutes int) time.Time {
 	return datetime.Add(time.Duration(minutes) * time.Minute)
 }
 
@@ -269,14 +300,13 @@ func GetDayCount(datetime time.Time) int {
  * 获取当前日期是周几（1:周一｜2:周二｜...|7:周日）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetCurrentWeek() int {
-	nowDate := time.Now()
-	return GetWeekWithDate(nowDate)
+	return GetWeek(time.Now())
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取指定的日期是周几（1:周一｜2:周二｜...|7:周日）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetWeekWithDate(date time.Time) int {
+func GetWeek(date time.Time) int {
 	nowDate := date
 	days := map[int]int{
 		1: 1,
@@ -315,7 +345,7 @@ func GetDateRangeForWeekInDateRange(startDate, endDate time.Time, week int) []ti
 	date := startDate
 
 	for date.Before(endDate) || date.Equal(endDate) {
-		weekValue := GetWeekWithDate(date)
+		weekValue := GetWeek(date)
 		if weekValue == week {
 			dateList = append(dateList, date)
 		}

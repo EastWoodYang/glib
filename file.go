@@ -8,6 +8,7 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -27,6 +28,7 @@ type (
 	FileInfoList []*FileInfo
 	FileInfo     struct {
 		Filename string `form:"filename" json:"filename"` //原始文件名（test.jpg）
+		Data     []byte `form:"data" json:"data"`         //文件字节切片
 		Size     int64  `form:"size" json:"size"`         //大小（单位：字节）
 		Duration int64  `form:"duration" json:"duration"` //时长（单位：秒）
 		Path     string `form:"path" json:"path"`         //全路径（本地磁盘或第三方文件系统）
@@ -135,6 +137,40 @@ func GetFilename(filePath string) (string, string, string) {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取Http请求里的文件数据
+ * maxSize: 文件大小限制，0表示不限制
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetHttpRequestFile(req *http.Request, maxSize int64) (*FileInfo, error) {
+	//获取请求文件
+	inputFile, fileHeader, err := req.FormFile("file")
+	if err != nil {
+		return nil, err
+	}
+	defer inputFile.Close()
+
+	//判断大小是否超出限制
+	size := inputFile.(IFileSize).Size()
+	if maxSize != 0 && size > maxSize {
+		return nil, errors.New("file is too large")
+	}
+
+	//读取文件数据到字节切片
+	dataBytes, err := ioutil.ReadAll(inputFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//返回数据结果
+	fileInfo := &FileInfo{
+		Filename: fileHeader.Filename,
+		Data:     dataBytes,
+		Size:     size,
+	}
+
+	return fileInfo, nil
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取图片文件
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetImageFile(filename string, args ...string) (image.Image, error) {
@@ -203,6 +239,26 @@ func CutVideoImage(sourceFile, newFilename string, width, height uint64, second,
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 保存Http 上传的文件到磁盘指定目录（返回客户端原文件名，大小，全文件路径，错误）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func SaveHttpFile(req *http.Request, filename, basePath string, maxSize int64, args ...string) (*FileInfo, error) {
+	fileInfo, err := GetHttpRequestFile(req, maxSize)
+	if err != nil {
+		return nil, err
+	}
+
+	fullFilename, err := SaveFile(fileInfo.Data, filename, basePath, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	fileInfo.Path = fullFilename
+	log.Printf("SaveHttpFile Filename: %s, fullFilename: %s", fileInfo.Filename, fileInfo.Path)
+
+	return fileInfo, nil
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 保存文件
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func SaveFile(data []byte, filename, basePath string, args ...string) (string, error) {
@@ -224,7 +280,7 @@ func SaveFile(data []byte, filename, basePath string, args ...string) (string, e
 	log.Printf("SaveFile basePath: %s, filename: %s, fullFilename: %s", basePath, filename, fullFilename)
 
 	//写入文件数据
-	outputFile, err := os.OpenFile(fullFilename, os.O_WRONLY|os.O_CREATE, 0666)
+	outputFile, err := os.OpenFile(fullFilename, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return "", err
 	}
@@ -238,58 +294,6 @@ func SaveFile(data []byte, filename, basePath string, args ...string) (string, e
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 保存Http 上传的文件到磁盘指定目录（返回客户端原文件名，大小，全文件路径，错误）
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func SaveHttpFile(req *http.Request, filename, basePath string, maxSize int64, args ...string) (*FileInfo, error) {
-	inputFile, fileHeader, err := req.FormFile("file")
-	if err != nil {
-		return nil, err
-	}
-
-	size := inputFile.(IFileSize).Size()
-	if maxSize != 0 && size > maxSize {
-		return nil, errors.New("file is too large")
-	}
-
-	rootPath, _ := filepath.Abs(basePath)
-
-	if len(args) == 0 {
-		//默认保存在上传目录下，且生成当前日期目录
-		rootPath, _ = CreateDateDir(rootPath, time.Now(), 0755)
-	} else if len(args) == 1 {
-		//保存到指定目录
-		basePath = args[0]
-		rootPath, _ = filepath.Abs(basePath)
-		if _, err := CreateDir(0755, rootPath); err != nil {
-			return nil, err
-		}
-	}
-	fullFilename := rootPath + string(os.PathSeparator) + filename
-	log.Printf("SaveHttpFile basePath: %s, filename: %s, fullFilename: %s", basePath, filename, fullFilename)
-
-	outputFile, err := os.OpenFile(fullFilename, os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		return nil, err
-	}
-	defer outputFile.Close()
-	defer inputFile.Close()
-
-	if _, err = io.Copy(outputFile, inputFile); err != nil {
-		return nil, err
-	}
-
-	file := &FileInfo{
-		Filename: fileHeader.Filename,
-		Size:     size,
-		Path:     fullFilename,
-	}
-
-	log.Printf("SaveHttpFile Filename: %s, fullFilename: %s", fileHeader.Filename, fullFilename)
-
-	return file, nil
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 移动文件（全路径源文件，目的路径，日期，会根据日期自动创建路径然后连接到目的路径后）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func MoveFile(srcFilename, dstPath string, creationDate time.Time) (string, error) {
@@ -300,7 +304,7 @@ func MoveFile(srcFilename, dstPath string, creationDate time.Time) (string, erro
 		return "", err
 	}
 
-	srcFile, err := os.OpenFile(srcFullFilename, os.O_RDONLY|os.O_CREATE, 0666)
+	srcFile, err := os.OpenFile(srcFullFilename, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return "", err
 	}
@@ -317,7 +321,7 @@ func MoveFile(srcFilename, dstPath string, creationDate time.Time) (string, erro
 	}
 
 	dstFullFilename := rootPath + string(os.PathSeparator) + filepath.Base(srcFullFilename)
-	dstFile, err := os.OpenFile(dstFullFilename, os.O_WRONLY|os.O_CREATE, 0666)
+	dstFile, err := os.OpenFile(dstFullFilename, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return "", err
 	}

@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -65,6 +66,9 @@ func HttpPost(url, params string, args ...string) (string, error) {
 
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -78,42 +82,61 @@ func HttpPost(url, params string, args ...string) (string, error) {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 上传文件
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func HttpPostFile(filename string, url string) (int, string, error) {
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
-
-	// this step is very important
-	outFileWriter, err := bodyWriter.CreateFormFile("file", filename)
+func HttpPostFile(url, filename, fileTag string, params map[string]string) (int, map[string][]string, string, error) {
+	if !filepath.IsAbs(filename) {
+		filename, _ = filepath.Abs(filename)
+	}
+	file, err := os.Open(filename)
 	if err != nil {
-		return 0, "", err
+		return 0, nil, "", err
+	}
+	defer file.Close()
+
+	if fileTag == "" {
+		fileTag = "file"
 	}
 
-	// open file handle
-	inFileData, err := os.Open(filename)
+	bodyBuffer := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuffer)
+	formFile, err := bodyWriter.CreateFormFile(fileTag, filepath.Base(filename))
 	if err != nil {
-		return 0, "", err
+		return 0, nil, "", err
 	}
 
-	// iocopy
-	_, err = io.Copy(outFileWriter, inFileData)
+	//写入file数据
+	_, err = io.Copy(formFile, file)
 	if err != nil {
-		return 0, "", err
+		return 0, nil, "", err
+	}
+
+	//写入参数
+	for key, val := range params {
+		_ = bodyWriter.WriteField(key, val)
 	}
 
 	contentType := bodyWriter.FormDataContentType()
-	bodyWriter.Close()
-
-	resp, err := http.Post(url, contentType, bodyBuf)
+	err = bodyWriter.Close()
 	if err != nil {
-		return 0, "", err
+		return 0, nil, "", err
+	}
+
+	//http post
+	resp, err := http.Post(url, contentType, bodyBuffer)
+	if err != nil {
+		return 0, nil, "", err
 	}
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, "", err
-	}
 
+	//状态码
 	statusCode, _ := strconv.Atoi(resp.Status)
 
-	return statusCode, string(respBody), err
+	header := resp.Header
+
+	//获取响应数据
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, nil, "", err
+	}
+
+	return statusCode, header, string(body), err
 }
