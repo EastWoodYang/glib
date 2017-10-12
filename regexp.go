@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 /* ================================================================================
@@ -137,6 +138,7 @@ func IsMobile(sourceString string) bool {
 	//pattern := "^0?(\\d{2})?1[3|4|5|6|7|8][0-9]\\d{8}$"
 	pattern := "^0?(\\d{2})?1[3|4|5|6|7|8|9][0-9]\\d{8}$"
 	re := regexp.MustCompile(pattern)
+
 	return re.MatchString(sourceString)
 }
 
@@ -146,5 +148,74 @@ func IsMobile(sourceString string) bool {
 func IsTelphone(sourceString string) bool {
 	pattern := "^0\\d{2,3}-?\\d{7,8}$|^\\d{7,8}-?\\d{3,5}$"
 	re := regexp.MustCompile(pattern)
+
 	return re.MatchString(sourceString)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 判断是否sql
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func IsSql(source string) bool {
+	if source == "" {
+		return false
+	}
+
+	pattern := `(?:')|(?:--)|(/\\*(?:.|[\\n\\r])*?\\*/)|(\b(select|update|and|or|delete|insert|trancate|char|chr|into|substr|ascii|declare|exec|count|master|into|drop|execute)\b)`
+	re, _ := regexp.Compile(pattern)
+
+	return re.MatchString(source)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * sql过滤
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func SqlFilter(source string) string {
+	if source == "" {
+		return source
+	}
+
+	pattern := `(?:')|(?:--)|(/\\*(?:.|[\\n\\r])*?\\*/)|(\b(select|update|and|or|delete|insert|trancate|char|chr|into|substr|ascii|declare|exec|count|master|into|drop|execute)\b)`
+	re, _ := regexp.Compile(pattern)
+
+	return re.ReplaceAllString(source, "")
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 去除连续的换行符
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func TrimSpaceLine(source string) string {
+	if source == "" {
+		return source
+	}
+
+	re, _ := regexp.Compile("\\s{2,}")
+	trimFunc := re.ReplaceAllString(source, "\r\n")
+
+	return strings.TrimSpace(trimFunc)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 换行转br标签
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func String2Br(source string) string {
+	if source == "" {
+		return source
+	}
+
+	re, _ := regexp.Compile("\r\n|\n")
+
+	return re.ReplaceAllString(source, "<br/>")
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 换行转br标签
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Br2String(source string) string {
+	if source == "" {
+		return source
+	}
+
+	re, _ := regexp.Compile("<br/>")
+
+	return re.ReplaceAllString(source, "\r\n")
 }
