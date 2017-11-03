@@ -66,6 +66,9 @@ func GetTokenString() string {
  * 获取字符串个数（不是字节数）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetStringCount(sourceString string) int {
+	if sourceString == "" {
+		return 0
+	}
 	return utf8.RuneCountInString(sourceString)
 }
 

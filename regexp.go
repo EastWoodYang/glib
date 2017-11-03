@@ -26,11 +26,11 @@ func IsRegexpMatch(sourceString string, pattern string) bool {
  * 是否中文
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func IsChinese(sourceString string, args ...interface{}) bool {
-	pattern := "^[\u4E00-\u9FFF]$"
+	pattern := "^[\u4E00-\u9FFF\uFF00-\uFFEF]$"
 	if len(args) == 1 {
-		pattern = fmt.Sprintf("^[\u4E00-\u9FFF]{,%d}$", args...)
+		pattern = fmt.Sprintf("^[\u4E00-\u9FFF\uFF00-\uFFEF]{1,%d}$", args...)
 	} else if len(args) == 2 {
-		pattern = fmt.Sprintf("^[\u4E00-\u9FFF]{%d,%d}$", args...)
+		pattern = fmt.Sprintf("^[\u4E00-\u9FFF\uFF00-\uFFEF]{%d,%d}$", args...)
 	}
 
 	re := regexp.MustCompile(pattern)
@@ -58,7 +58,7 @@ func IsUsername(sourceString string, args ...interface{}) bool {
 	}
 
 	if len(args) == 1 {
-		pattern = fmt.Sprintf("^%s{,%d}$", items...)
+		pattern = fmt.Sprintf("^%s{1,%d}$", items...)
 	} else if len(args) == 2 {
 		pattern = fmt.Sprintf("^%s{%d,%d}$", items...)
 	} else {
@@ -74,7 +74,7 @@ func IsUsername(sourceString string, args ...interface{}) bool {
 func IsAlpha(sourceString string, args ...interface{}) bool {
 	pattern := "^\\w+$"
 	if len(args) == 1 {
-		pattern = fmt.Sprintf("^\\w{,%d}$", args...)
+		pattern = fmt.Sprintf("^\\w{1,%d}$", args...)
 	} else if len(args) == 2 {
 		pattern = fmt.Sprintf("^\\w{%d,%d}$", args...)
 	}
@@ -89,7 +89,7 @@ func IsAlpha(sourceString string, args ...interface{}) bool {
 func IsNumber(sourceString string, args ...interface{}) bool {
 	pattern := "^\\d+$"
 	if len(args) == 1 {
-		pattern = fmt.Sprintf("^\\d{,%d}$", args...)
+		pattern = fmt.Sprintf("^\\d{1,%d}$", args...)
 	} else if len(args) == 2 {
 		pattern = fmt.Sprintf("^\\d{%d,%d}$", args...)
 	}
@@ -204,7 +204,7 @@ func String2Br(source string) string {
 
 	re, _ := regexp.Compile("\r\n|\n")
 
-	return re.ReplaceAllString(source, "<br/>")
+	return re.ReplaceAllString(source, "<br />")
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -215,7 +215,7 @@ func Br2String(source string) string {
 		return source
 	}
 
-	re, _ := regexp.Compile("<br/>")
+	re, _ := regexp.Compile("<br />")
 
 	return re.ReplaceAllString(source, "\r\n")
 }

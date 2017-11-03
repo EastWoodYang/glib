@@ -15,12 +15,36 @@ import (
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 安全字符串
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func SafeString(source string) string {
+func SafeString(source string, args ...bool) string {
 	if source == "" {
 		return source
 	}
 
-	content := HtmlEncode(HtmlTagFilter(SqlFilter(source)))
+	isFilterHtmlTag := true
+	isFilterSql := true
+	argCount := len(args)
+	if argCount > 0 {
+		if argCount == 1 {
+			isFilterHtmlTag = args[0]
+		}
+		if argCount > 1 {
+			isFilterSql = args[1]
+		}
+	}
+
+	content := ""
+	if isFilterHtmlTag || isFilterSql {
+		if isFilterHtmlTag {
+			content = HtmlTagFilter(source)
+		}
+
+		if isFilterSql {
+			content = SqlFilter(source)
+		}
+	}
+
+	content = HtmlEncode(source)
+
 	return content
 }
 
@@ -50,7 +74,8 @@ func HtmlEncode(source string) string {
 	all["<"] = "&gt;"
 	all["&"] = "&amp;"
 	all["\""] = "&quot;"
-	all[" "] = "&nbsp;"
+	all["'"] = "&#39;"
+	//all[" "] = "&nbsp;"
 
 	for k, v := range all {
 		result = strings.Replace(result, k, v, -1)
@@ -73,7 +98,8 @@ func HtmlDecode(source string) string {
 	all["<"] = "&gt;"
 	all["&"] = "&amp;"
 	all["\""] = "&quot;"
-	all[" "] = "&nbsp;"
+	all["'"] = "&#39;"
+	//all[" "] = "&nbsp;"
 
 	for k, v := range all {
 		result = strings.Replace(result, v, k, -1)
