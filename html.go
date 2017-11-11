@@ -206,3 +206,17 @@ func HtmlScriptFilter(source string) string {
 
 	return re.ReplaceAllString(source, "")
 }
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 过滤markdown img标记
+ * ![](http://img.woshiyiren.com/s/1/000002/wKgAA1oAjnCAOrkgAADQl5vsv_s123.jpg)
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func MarkdownImageFilter(source string) string {
+	if source == "" {
+		return source
+	}
+
+	re, _ := regexp.Compile("!?(\\[.*\\])?\\(.+\\)")
+
+	return re.ReplaceAllString(source, "")
+}
