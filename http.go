@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -139,4 +140,33 @@ func HttpPostFile(url, filename, fileTag string, params map[string]string) (int,
 	}
 
 	return statusCode, header, string(body), err
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Url编码
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func UrlEncode(sourceUrl string) string {
+	encodeUrl := sourceUrl
+	if sourceUrl != "" {
+		//url.QueryEscape
+		if urlParser, err := url.Parse(sourceUrl); err == nil {
+			encodeUrl = urlParser.EscapedPath()
+		}
+	}
+
+	return encodeUrl
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Url解码
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func UrlDecode(sourceUrl string) string {
+	decodeUrl := sourceUrl
+	if sourceUrl != "" {
+		if urlParser, err := url.Parse(sourceUrl); err == nil {
+			decodeUrl = urlParser.Path
+		}
+	}
+
+	return decodeUrl
 }
