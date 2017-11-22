@@ -574,27 +574,6 @@ func FromXml(xmlString string, object interface{}) error {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 获取url里指定参数的值
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetUrlParamValue(url, paramName string) string {
-	paramValue := ""
-	urlParams := strings.Split(url, "?")
-
-	if len(urlParams) == 2 {
-		params := strings.Split(urlParams[1], "&")
-		for _, v := range params {
-			items := strings.Split(v, "=")
-			if strings.ToLower(items[0]) == strings.ToLower(paramName) {
-				paramValue = items[1]
-				break
-			}
-		}
-	}
-
-	return paramValue
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取数据的缓存key
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetModelKey(model interface{}, prefixKey, fieldName string) string {

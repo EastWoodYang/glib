@@ -193,33 +193,50 @@ func DesDecrypt(crypted, key []byte) ([]byte, error) {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Aes加密
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func AesEncrypt(origData, key []byte) ([]byte, error) {
+func AesEncrypt(origData, key []byte, args ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key[0:16])
 	if err != nil {
 		return nil, err
 	}
+
 	blockSize := block.BlockSize()
+
+	iv := key[:blockSize]
+	if len(args) > 0 {
+		iv = args[0][:blockSize]
+	}
+
 	origData = Pkcs5Padding(origData, blockSize)
-	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize])
+	blockMode := cipher.NewCBCEncrypter(block, iv)
+
 	crypted := make([]byte, len(origData))
 	blockMode.CryptBlocks(crypted, origData)
+
 	return crypted, nil
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Aes解密
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func AesDecrypt(crypted, key []byte) ([]byte, error) {
+func AesDecrypt(crypted, key []byte, args ...[]byte) ([]byte, error) {
 	block, err := aes.NewCipher(key[0:16])
 	if err != nil {
 		return nil, err
 	}
+
 	blockSize := block.BlockSize()
-	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize])
+
+	iv := key[:blockSize]
+	if len(args) > 0 {
+		iv = args[0][:blockSize]
+	}
+
+	blockMode := cipher.NewCBCDecrypter(block, iv)
 	origData := make([]byte, len(crypted))
 
 	blockMode.CryptBlocks(origData, crypted)
 	origData = Pkcs5UnPadding(origData)
+
 	return origData, nil
 }
 
