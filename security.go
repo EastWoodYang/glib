@@ -49,6 +49,15 @@ func Sha1(data string) string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Sha256哈希
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Sha256(data string) string {
+	t := sha256.New()
+	io.WriteString(t, data)
+	return fmt.Sprintf("%x", t.Sum(nil))
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Hmac Sha1哈希
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func HmacSha1(data string, key string, args ...bool) string {
@@ -63,7 +72,6 @@ func HmacSha1(data string, key string, args ...bool) string {
 	}
 
 	if isHex {
-		//resultString = fmt.Sprintf("%x", mac.Sum(nil))
 		resultString = hex.EncodeToString(mac.Sum(nil))
 	} else {
 		resultString = string(mac.Sum(nil))
@@ -72,12 +80,25 @@ func HmacSha1(data string, key string, args ...bool) string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Sha1哈希
+ * Hmac Sha256哈希
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func Sha256(data string) string {
-	t := sha256.New()
-	io.WriteString(t, data)
-	return fmt.Sprintf("%x", t.Sum(nil))
+func HmacSha256(data string, key string, args ...bool) string {
+	resultString := ""
+	isHex := true
+
+	mac := hmac.New(sha256.New, []byte(key))
+	mac.Write([]byte(data))
+
+	if len(args) > 0 {
+		isHex = args[0]
+	}
+
+	if isHex {
+		resultString = hex.EncodeToString(mac.Sum(nil))
+	} else {
+		resultString = string(mac.Sum(nil))
+	}
+	return resultString
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -271,7 +292,7 @@ func RSAEncrypt(origData, publicKey []byte) ([]byte, error) {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Rsa解密
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func RSADecrypt(ciphertext, privateKey []byte) ([]byte, error) {
+func RSADecrypt(cipherData, privateKey []byte) ([]byte, error) {
 	block, _ := pem.Decode(privateKey)
 	if block == nil {
 		return nil, errors.New("private key error!")
@@ -280,18 +301,19 @@ func RSADecrypt(ciphertext, privateKey []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return rsa.DecryptPKCS1v15(crand.Reader, priv, ciphertext)
+	return rsa.DecryptPKCS1v15(crand.Reader, priv, cipherData)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 生成RsaKey
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GenRsaKey(bits int) (string, string, error) {
-	// 生成私钥文件
+	// 生成私钥
 	privateKey, err := rsa.GenerateKey(crand.Reader, bits)
 	if err != nil {
 		return "", "", err
 	}
+
 	derStream := x509.MarshalPKCS1PrivateKey(privateKey)
 	block := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
@@ -304,7 +326,7 @@ func GenRsaKey(bits int) (string, string, error) {
 		return "", "", err
 	}
 
-	// 生成公钥文件
+	// 生成公钥
 	publicKey := &privateKey.PublicKey
 	derPkix, err := x509.MarshalPKIXPublicKey(publicKey)
 	if err != nil {
@@ -321,6 +343,7 @@ func GenRsaKey(bits int) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
+
 	return privateBuffer.String(), publicBuffer.String(), nil
 }
 
