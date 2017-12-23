@@ -576,13 +576,15 @@ func FromXml(xmlString string, object interface{}) error {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取数据的缓存key
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetModelKey(model interface{}, prefixKey, fieldName string) string {
+func GetModelKey(model interface{}, args ...string) string {
 	typeOf := reflect.TypeOf(model)
 	valueOf := reflect.ValueOf(model)
 	valueElem := valueOf.Elem()
 
-	if len(fieldName) == 0 {
-		fieldName = "Id"
+	fieldName := "Id"
+
+	if len(args) > 0 {
+		fieldName = args[0]
 	}
 
 	if kind := typeOf.Kind(); kind != reflect.Ptr {
@@ -597,7 +599,7 @@ func GetModelKey(model interface{}, prefixKey, fieldName string) string {
 	}
 
 	fieldValue := valueElem.FieldByName(fieldName).Uint()
-	modelKey = fmt.Sprintf("%s|%s|%d", prefixKey, pkgName, fieldValue)
+	modelKey = fmt.Sprintf("%s|%d", pkgName, fieldValue)
 	modelKey = strings.ToLower(modelKey)
 
 	return modelKey

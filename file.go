@@ -45,10 +45,8 @@ type (
 func GetCurrentPath() string {
 	file, _ := exec.LookPath(os.Args[0])
 	path, _ := filepath.Abs(file)
-	splitstring := strings.Split(path, string(os.PathSeparator))
-	length := len(splitstring)
-	splitstring = splitstring[:length-1]
-	return strings.Join(splitstring, string(os.PathSeparator))
+	paths := strings.Split(path, string(os.PathSeparator))
+	return strings.Join(paths[:len(paths)-1], string(os.PathSeparator))
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
