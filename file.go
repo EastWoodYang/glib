@@ -91,12 +91,7 @@ func CreateDateDir(rootPath string, datetime time.Time, perm os.FileMode) (strin
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func CreateCurrentDateDir(rootPath string, perm os.FileMode) (string, error) {
 	nowDate := time.Now()
-	year, month, day := nowDate.Date()
-	sYear := fmt.Sprintf("%d", year)
-	sMonth := fmt.Sprintf("%02d", month)
-	sDay := fmt.Sprintf("%02d", day)
-
-	return CreateDir(perm, rootPath, sYear, sMonth, sDay)
+	return CreateDateDir(rootPath, nowDate, perm)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -138,13 +133,18 @@ func GetFilename(filePath string) (string, string, string) {
  * 获取Http请求里的文件数据
  * maxSize: 文件大小限制，0表示不限制
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetHttpRequestFile(req *http.Request, maxSize int64) (*FileInfo, error) {
+func GetHttpRequestFile(req *http.Request, args ...int64) (*FileInfo, error) {
 	//获取请求文件
 	inputFile, fileHeader, err := req.FormFile("file")
 	if err != nil {
 		return nil, err
 	}
 	defer inputFile.Close()
+
+	var maxSize int64
+	if len(args) > 0 {
+		maxSize = args[0]
+	}
 
 	//判断大小是否超出限制
 	size := inputFile.(IFileSize).Size()

@@ -9,7 +9,9 @@ GLib Common Api
 * rand
 * regexp
 * file
+* html
 * http
 * security 
+* keyword filter
 * qr
 ---------------------------

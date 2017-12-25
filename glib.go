@@ -578,6 +578,10 @@ func FromXml(xmlString string, object interface{}) error {
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetModelKey(model interface{}, args ...string) string {
 	typeOf := reflect.TypeOf(model)
+	if kind := typeOf.Kind(); kind != reflect.Ptr {
+		panic("Model is not a pointer type")
+	}
+
 	valueOf := reflect.ValueOf(model)
 	valueElem := valueOf.Elem()
 
@@ -585,10 +589,6 @@ func GetModelKey(model interface{}, args ...string) string {
 
 	if len(args) > 0 {
 		fieldName = args[0]
-	}
-
-	if kind := typeOf.Kind(); kind != reflect.Ptr {
-		panic("Model is not a pointer type")
 	}
 
 	modelKey := ""
