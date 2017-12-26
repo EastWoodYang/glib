@@ -191,6 +191,15 @@ func GetImageFile(filename string, args ...string) (image.Image, error) {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 运行命令
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Command(cmd string, args ...string) (string, error) {
+	command := exec.Command(cmd, args...)
+	output, err := command.Output()
+	return string(output), err
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 从视频文件截取图片
  * ffmpeg -i ./test.mp4 -ss 00:00:01 -s 120*120 -r 1 -q:v 2 -f image2 -vframes 1 image-%2d.jpg
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
@@ -226,10 +235,7 @@ func CutVideoImage(sourceFile, newFilename string, width, height uint64, second,
 	params = append(params, "1")
 	params = append(params, newFilename)
 
-	log.Printf("sourceFile: " + sourceFile + " ,newFilename: " + newFilename)
-
-	cmd := exec.Command("ffmpeg", params...)
-	_, err := cmd.Output()
+	_, err := Command("ffmpeg", params...)
 	if err != nil {
 		return strings.Join(params, " "), err
 	}
