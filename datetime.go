@@ -15,6 +15,20 @@ import (
  * ================================================================================ */
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 判断firstDatetime是否在secondDatetime的后面，即firstDatetime比secondDatetime日期大
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func IsDateGreaterThan(firstDatetime, secondDatetime time.Time) bool {
+	return firstDatetime.After(secondDatetime)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 判断firstDatetime是否在secondDatetime的前面，即firstDatetime比secondDatetime日期小
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func IsDateLessThan(firstDatetime, secondDatetime time.Time) bool {
+	return firstDatetime.Before(secondDatetime)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前Unix秒时间戳
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func UnixTimestamp(args ...bool) int64 {
@@ -39,7 +53,7 @@ func UnixTimestampDate() time.Time {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Unix日期（0001-01-01 00:00:00）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func UnixDate2() time.Time {
+func UnixDate() time.Time {
 	dtTime, _ := StringToTime(time.UnixDate)
 	return dtTime
 }
@@ -271,7 +285,7 @@ func StringSliceToDate(dateStringSlice []string) (time.Time, error) {
 
 	dtTime, err := StringToTime(dateString)
 	if err != nil {
-		return UnixDate2(), err
+		return UnixDate(), err
 	}
 
 	return GetMinDate(dtTime), nil
@@ -306,7 +320,7 @@ func IntSliceToDate(intSlice []int) (time.Time, error) {
 
 	dtTime, err := StringToTime(strings.Join(dateStringSlice, "-"))
 	if err != nil {
-		return UnixDate2(), err
+		return UnixDate(), err
 	}
 
 	return GetMinDate(dtTime), nil
@@ -324,6 +338,20 @@ func DateToIntSlice(date time.Time) []int {
 	intSlice[2], _ = strconv.Atoi(dateStringSlice[2])
 
 	return intSlice
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * firstDatetime加上时间间隔duration，返回日期时间
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DatetimeAdd(firstDatetime time.Time, duration time.Duration) time.Time {
+	return firstDatetime.Add(duration)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * firstDatetime减去secondDatetime，返回时间间隔
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DatetimeSub(firstDatetime, secondDatetime time.Time) time.Duration {
+	return firstDatetime.Sub(secondDatetime)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
