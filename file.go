@@ -131,6 +131,25 @@ func GetFilename(filePath string) (string, string, string) {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取文件内容
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetFileContent(fullFilename string) ([]byte, error) {
+	fileStream, err := os.Open(fullFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	defer fileStream.Close()
+
+	fileContent, err := ioutil.ReadAll(fileStream)
+	if err != nil {
+		return nil, err
+	}
+
+	return fileContent, nil
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取Http请求里的文件数据
  * maxSize: 文件大小限制，0表示不限制
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
