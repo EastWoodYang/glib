@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 /* ================================================================================
@@ -56,6 +57,31 @@ func NewReflectFunc() *ReflectFunc {
 	}
 
 	return r
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 根据结构体和字段名获取对应的包名和字段值
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetFieldByName(model interface{}, fieldName string) (string, string, error) {
+	typeOf := reflect.TypeOf(model)
+	if kind := typeOf.Kind(); kind != reflect.Ptr {
+		panic("Model is not a pointer type")
+	}
+
+	valueElem := reflect.ValueOf(model).Elem()
+
+	if len(fieldName) == 0 {
+		fieldName = "Id"
+	}
+
+	if _, ok := valueElem.Type().FieldByName(fieldName); !ok {
+		return "", "", errors.New("fieldname not exists")
+	}
+
+	pkgName := strings.Split(valueElem.String(), " ")[0][1:]
+	fieldValue := valueElem.FieldByName(fieldName).String()
+
+	return pkgName, fieldValue, nil
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

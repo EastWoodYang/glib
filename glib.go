@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -571,38 +570,6 @@ func ToXml(object interface{}) (string, error) {
 func FromXml(xmlString string, object interface{}) error {
 	bytesData := []byte(xmlString)
 	return xml.Unmarshal(bytesData, object)
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 获取数据的缓存key
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetModelKey(model interface{}, args ...string) string {
-	typeOf := reflect.TypeOf(model)
-	if kind := typeOf.Kind(); kind != reflect.Ptr {
-		panic("Model is not a pointer type")
-	}
-
-	valueOf := reflect.ValueOf(model)
-	valueElem := valueOf.Elem()
-
-	fieldName := "Id"
-
-	if len(args) > 0 {
-		fieldName = args[0]
-	}
-
-	modelKey := ""
-	pkgName := strings.Split(valueElem.String(), " ")[0][1:]
-
-	if _, ok := valueElem.Type().FieldByName(fieldName); !ok {
-		panic("Model does not contain Id field")
-	}
-
-	fieldValue := valueElem.FieldByName(fieldName).Uint()
-	modelKey = fmt.Sprintf("%s|%d", pkgName, fieldValue)
-	modelKey = strings.ToLower(modelKey)
-
-	return modelKey
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
