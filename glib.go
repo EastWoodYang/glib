@@ -267,6 +267,20 @@ func StringSliceToString(stringSlice []string, args ...string) string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 保留指定长度字符串切片，前面的数据移除
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringSliceLatest(srcSlice []string, maxCount int) []string {
+	destSlice := srcSlice
+	count := len(destSlice)
+	if count > maxCount {
+		offsetIndex := count - maxCount
+		destSlice = destSlice[offsetIndex:count]
+	}
+
+	return destSlice
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 过滤uint64数组（从all中过滤所有other中的数据，返回未被过滤的数据集合）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func FilterUint64Slice(all, other []uint64) []uint64 {
