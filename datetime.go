@@ -89,6 +89,25 @@ func GetNow(args ...bool) time.Time {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当前年月日的整型数字值
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentYearMonthDay(args ...string) int {
+	var yearMonthDay int
+
+	format := "20060102"
+	if len(args) > 0 {
+		format = args[0]
+	}
+
+	yearMonthDayString := TimeToString(time.Now(), format)
+	if _yearMonthDay, err := strconv.Atoi(yearMonthDayString); err == nil {
+		yearMonthDay = _yearMonthDay
+	}
+
+	return yearMonthDay
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前年份
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetCurrentYear(args ...bool) int32 {
