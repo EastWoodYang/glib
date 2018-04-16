@@ -372,9 +372,6 @@ func RsaPublicToMultipleLine(privateKey string) string {
 	return privateKey
 }
 
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 将单行的Rsa Private字符串格式化为多行格式
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func RsaPrivateToMultipleLine(privateKey string) string {
 	privateKeys := make([]string, 0)
 	privateKeys = append(privateKeys, "-----BEGIN PRIVATE KEY-----")

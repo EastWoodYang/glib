@@ -36,6 +36,23 @@ func UnixTimestamp(args ...bool) int64 {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取指定日期的Unix秒时间戳
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DateToUnixTimestamp(date time.Time, args ...bool) int64 {
+	isUtc := false
+	if len(args) > 0 {
+		isUtc = args[0]
+	}
+
+	timeNow := date
+	if isUtc {
+		timeNow = date.UTC()
+	}
+
+	return timeNow.Unix()
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前Unix纳秒时间戳
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func UnixNanoTimestamp(args ...bool) int64 {
