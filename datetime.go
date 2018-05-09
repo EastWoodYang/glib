@@ -238,20 +238,20 @@ func GetMinDate(dtTime time.Time) time.Time {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 返回日期的最大日期时间（2016-01-02 59:59:59 999）
+ * 返回日期的最大日期时间（2016-01-02 23:59:59 999）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetMaxDate(dtTime time.Time) time.Time {
 	year, month, day := dtTime.Date()
-	return time.Date(int(year), time.Month(month), int(day), 59, 59, 59, 999, time.Local)
+	return time.Date(int(year), time.Month(month), int(day), 23, 59, 59, 999, time.Local)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 获取当月里最大日期时间（2016-01-02 59:59:59 999）
+ * 获取当月里最大日期时间（2016-01-02 23:59:59 999）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetCurrentMonthMaxDate() time.Time {
 	daysForMonth := GetCurrentDayCount()
 	year, month, _ := time.Now().Date()
-	return time.Date(int(year), time.Month(month), int(daysForMonth), 59, 59, 59, 999, time.Local)
+	return time.Date(int(year), time.Month(month), int(daysForMonth), 23, 59, 59, 999, time.Local)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
