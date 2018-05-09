@@ -246,6 +246,23 @@ func GetMaxDate(dtTime time.Time) time.Time {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当月里最大日期时间（2016-01-02 59:59:59 999）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentMonthMaxDate() time.Time {
+	daysForMonth := GetCurrentDayCount()
+	year, month, _ := time.Now().Date()
+	return time.Date(int(year), time.Month(month), int(daysForMonth), 59, 59, 59, 999, time.Local)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当月里最大日期时间戳(当月最后一天最大时间)，单位秒
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentMonthMaxTimestamp() int64 {
+	maxTimeForMonthLastDay := GetCurrentMonthMaxDate()
+	return DateToUnixTimestamp(maxTimeForMonthLastDay)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取日期时间的日期和星期字符串
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetDatetimeWeekString(datetime time.Time) string {
