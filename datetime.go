@@ -426,6 +426,34 @@ func DatetimeAdd(firstDatetime time.Time, duration time.Duration) time.Time {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * firstDatetime加上指定的天数，返回日期时间
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DatetimeAddDay(firstDatetime time.Time, dayValue int) time.Time {
+	return DatetimeAddHour(firstDatetime, 24*dayValue)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * firstDatetime加上指定的小时数，返回日期时间
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DatetimeAddHour(firstDatetime time.Time, hourValue int) time.Time {
+	return DatetimeAdd(firstDatetime, time.Duration(hourValue)*time.Hour)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * firstDatetime加上指定的分钟数，返回日期时间
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DatetimeAddMinute(firstDatetime time.Time, minuteValue int) time.Time {
+	return DatetimeAdd(firstDatetime, time.Duration(minuteValue)*time.Minute)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * firstDatetime加上指定的秒数，返回日期时间
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DatetimeAddSecond(firstDatetime time.Time, secondValue int) time.Time {
+	return DatetimeAdd(firstDatetime, time.Duration(secondValue)*time.Second)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * firstDatetime减去secondDatetime，返回时间间隔
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func DatetimeSub(firstDatetime, secondDatetime time.Time) time.Duration {
