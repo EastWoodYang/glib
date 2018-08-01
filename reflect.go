@@ -1,6 +1,7 @@
 package glib
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -31,6 +32,7 @@ type (
 	FieldInfo struct {
 		Index     []int
 		Name      string
+		Tag       map[string]interface{}
 		Type      string
 		Value     reflect.Value
 		Interface interface{}
@@ -346,10 +348,15 @@ func (s *Reflect) Fields() ([]*FieldInfo, error) {
 
 	for i := 0; i < s.typeOf.NumField(); i++ {
 		field := s.typeOf.Field(i)
+
+		tagMap := make(map[string]interface{}, 0)
+		tagMap["json"] = field.Tag.Get("json")
+
 		fieldInfo := &FieldInfo{
 			Index: field.Index,
 			Name:  field.Name,
 			Type:  fmt.Sprintf("%s", field.Type),
+			Tag:   tagMap,
 		}
 
 		if field.Type.Kind() == reflect.Struct {
@@ -384,7 +391,7 @@ func (s *Reflect) fieldChilds(indexs []int, fieldInfo *FieldInfo, field reflect.
 				s.fieldChilds(indexs, newFieldInfo, newField)
 			} else {
 				newFieldInfo.Value = s.valueOf.FieldByIndex(indexs)
-				newFieldInfo.Interface = s.valueOf.FieldByIndex(indexs).Interface()
+				//newFieldInfo.Interface = s.valueOf.FieldByIndex(indexs).Interface()
 			}
 
 			fieldInfo.Childs = append(fieldInfo.Childs, newFieldInfo)
@@ -561,6 +568,52 @@ func (s *Reflect) Kind() reflect.Kind {
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) Size() uintptr {
 	return s.typeOf.Size()
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 输出信息
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) Dump() string {
+	dumps := make([]string, 0)
+
+	if fieldInfos, err := s.Fields(); err == nil {
+		for _, fieldInfo := range fieldInfos {
+			fieldName := fieldInfo.Name
+			fieldValue := fieldInfo.Value
+
+			if jsonName, isOk := fieldInfo.Tag["json"]; isOk {
+				fieldName = jsonName.(string)
+			}
+
+			if fieldName != "-" {
+				info := fmt.Sprintf("%s:%v", fieldName, fieldValue)
+				dumps = append(dumps, info)
+			}
+		}
+	}
+
+	jsonDumpString := ""
+	if jsonDump, err := json.Marshal(dumps); err == nil {
+		jsonDumpString = string(jsonDump)
+		if len(jsonDumpString) > 0 {
+			if isExists := strings.HasPrefix(jsonDumpString, "["); isExists {
+				jsonDumpString = strings.TrimLeft(jsonDumpString, "[")
+			}
+
+			if isExists := strings.HasSuffix(jsonDumpString, "]"); isExists {
+				jsonDumpString = strings.TrimRight(jsonDumpString, "]")
+			}
+		}
+	}
+
+	return fmt.Sprintf("\r\n===== Dump Begin =====\r\n%s\r\n===== Dump End =====", jsonDumpString)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 是否切片对象
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) IsSlice() bool {
+	return s.typeOf.Kind() == reflect.Slice
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
