@@ -130,6 +130,42 @@ func ReverseUint64Slice(int64Slice []uint64) {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串转换为uint64
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringToUint64(stringValue string) uint64 {
+	var uintValue uint64 = 0
+
+	if len(stringValue) == 0 {
+		return uintValue
+	}
+
+	uintValue, err := strconv.ParseUint(stringValue, 10, 64)
+	if err != nil {
+		return 0
+	}
+
+	return uintValue
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串转换为int64
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringToInt64(stringValue string) int64 {
+	var intValue int64 = 0
+
+	if len(stringValue) == 0 {
+		return intValue
+	}
+
+	intValue, err := strconv.ParseInt(stringValue, 10, 64)
+	if err != nil {
+		return 0
+	}
+
+	return intValue
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 用指定的字符串把源字符串分隔为uint64切片
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func StringToUint64Slice(sourceString string, args ...string) []uint64 {
