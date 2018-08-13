@@ -166,6 +166,24 @@ func StringToInt64(stringValue string) int64 {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串转换为float64
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringToFloat64(stringValue string) float64 {
+	var floatValue float64 = 0.0
+
+	if len(stringValue) == 0 {
+		return floatValue
+	}
+
+	floatValue, err := strconv.ParseFloat(stringValue, 10)
+	if err != nil {
+		return 0.0
+	}
+
+	return floatValue
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 用指定的字符串把源字符串分隔为uint64切片
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func StringToUint64Slice(sourceString string, args ...string) []uint64 {
