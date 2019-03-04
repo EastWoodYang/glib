@@ -29,62 +29,59 @@ func IsDateLessThan(firstDatetime, secondDatetime time.Time) bool {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 获取当前Unix秒时间戳
+ * 获取当前Unix时间戳
+ * 当前日期距离197011000的秒数
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func UnixTimestamp(args ...bool) int64 {
-	return GetNow(args...).Unix()
+func UnixTimestamp() int64 {
+	return GetNow().Unix()
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前Unix纳秒时间戳
+ * 当前日期距离197011000的纳秒数
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func UnixNanoTimestamp(args ...bool) int64 {
-	return GetNow(args...).UnixNano()
+func UnixNanoTimestamp() int64 {
+	return GetNow().UnixNano()
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Unix日期（1970-01-01 00:00:00）
+ * Unix时间戳日期（1970-01-01 00:00:00）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func UnixTimestampDate(args ...bool) time.Time {
-	isUtc := true
-	if len(args) > 0 {
-		isUtc = args[0]
-	}
-
-	dtTime := time.Date(1970, 1, 1, 0, 0, 0, 0, time.Local)
-	if isUtc {
-		dtTime = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
-	}
-
+func UnixTimestampDate() time.Time {
+	dtTime := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	return dtTime
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Unix日期（0001-01-01 00:00:00）
+ * Golang零时间日期（0001-01-01 00:00:00）
+ * -62135596800
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func UnixDate() time.Time {
-	dtTime, _ := StringToTime(time.UnixDate)
+	dtTime, _ := StringToTime(time.UnixDate, true)
 	return dtTime
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取指定日期的Unix秒时间戳
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func DateToUnixTimestamp(date time.Time, args ...bool) int64 {
+func DateToUnixTimestamp(date time.Time) int64 {
 	var unixValue int64
 
 	if !date.IsZero() {
-		isUtc := false
-		if len(args) > 0 {
-			isUtc = args[0]
-		}
+		unixValue = date.Unix()
+	}
 
-		timeNow := date
-		if isUtc {
-			timeNow = date.UTC()
-		}
+	return unixValue
+}
 
-		unixValue = timeNow.Unix()
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取指定日期的Unix纳秒时间戳
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func DateToUnixNanoTimestamp(date time.Time) int64 {
+	var unixValue int64
+
+	if !date.IsZero() {
+		unixValue = date.UnixNano()
 	}
 
 	return unixValue
@@ -94,30 +91,21 @@ func DateToUnixTimestamp(date time.Time, args ...bool) int64 {
  * 根据Unix时间戳返回日期
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func UnixTimestampToDate(unixTimestamp int64) time.Time {
-	return time.Unix(unixTimestamp, 0)
+	return time.Unix(unixTimestamp, 0).UTC()
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 根据Unix纳秒时间戳返回日期
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func UnixNanoTimestampToDate(unixNanoTimestamp int64) time.Time {
-	return time.Unix(0, unixNanoTimestamp)
+	return time.Unix(0, unixNanoTimestamp).UTC()
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前日期时间
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetNow(args ...bool) time.Time {
-	isUtc := false
-	if len(args) > 0 {
-		isUtc = args[0]
-	}
-	timeNow := time.Now()
-	if isUtc {
-		timeNow = time.Now().UTC()
-	}
-
-	return timeNow
+func GetNow() time.Time {
+	return time.Now()
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -142,48 +130,48 @@ func GetCurrentYearMonthDay(args ...string) int {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前年份
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetCurrentYear(args ...bool) int32 {
-	year, _, _ := GetNow(args...).Date()
+func GetCurrentYear() int32 {
+	year, _, _ := GetNow().Date()
 	return int32(year)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前月份
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetCurrentMonth(args ...bool) int32 {
-	_, month, _ := GetNow(args...).Date()
+func GetCurrentMonth() int32 {
+	_, month, _ := GetNow().Date()
 	return int32(month)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前日
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetCurrentDay(args ...bool) int32 {
-	_, _, day := GetNow(args...).Date()
+func GetCurrentDay() int32 {
+	_, _, day := GetNow().Date()
 	return int32(day)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前小时
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetCurrentHour(args ...bool) int32 {
-	hour, _, _ := GetNow(args...).Clock()
+func GetCurrentHour() int32 {
+	hour, _, _ := GetNow().Clock()
 	return int32(hour)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前分钟
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetCurrentMinute(args ...bool) int32 {
-	_, minute, _ := GetNow(args...).Clock()
+func GetCurrentMinute() int32 {
+	_, minute, _ := GetNow().Clock()
 	return int32(minute)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前秒数
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetCurrentSecond(args ...bool) int32 {
-	_, _, second := GetNow(args...).Clock()
+func GetCurrentSecond() int32 {
+	_, _, second := GetNow().Clock()
 	return int32(second)
 }
 
@@ -239,16 +227,16 @@ func GetDateSecond(datetime time.Time) int32 {
  * 返回日期的最小日期时间（2016-01-02 00:00:00）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetMinDate(dtTime time.Time) time.Time {
-	year, month, day := dtTime.Date()
-	return time.Date(int(year), time.Month(month), int(day), 0, 0, 0, 0, time.Local)
+	year, month, day := dtTime.UTC().Date()
+	return time.Date(int(year), time.Month(month), int(day), 0, 0, 0, 0, time.UTC)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 返回日期的最大日期时间（2016-01-02 23:59:59 999）
+ * 返回日期的最大日期时间（2016-01-02 23:59:59 999999999）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetMaxDate(dtTime time.Time) time.Time {
 	year, month, day := dtTime.Date()
-	return time.Date(int(year), time.Month(month), int(day), 23, 59, 59, 999, time.Local)
+	return time.Date(int(year), time.Month(month), int(day), 23, 59, 59, 999999999, time.UTC)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -268,12 +256,12 @@ func GetMaxDateTimestamp(dtTime time.Time) int64 {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 获取当月里最大日期时间（2016-01-02 23:59:59 999）
+ * 获取当月里最大日期时间（2016-01-02 23:59:59 999999999）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetCurrentMonthMaxDate() time.Time {
 	daysForMonth := GetCurrentDayCount()
 	year, month, _ := time.Now().Date()
-	return time.Date(int(year), time.Month(month), int(daysForMonth), 23, 59, 59, 999, time.Local)
+	return time.Date(int(year), time.Month(month), int(daysForMonth), 23, 59, 59, 999999999, time.Local)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -308,53 +296,73 @@ func GetDatetimeWeekString(datetime time.Time) string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 获取友好的日期时间字符串
+ * 日期时间转换成友好的显示字符串
+ * isUtc:bool | format:string
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func TimeToFriendString(datetime time.Time, args ...string) string {
+func TimeToFriendString(datetime time.Time, args ...interface{}) string {
 	format := "2006-01-02 15:04:05"
+	isUtc := false
+
 	if len(args) > 0 {
-		format = args[0]
+		if v, ok := args[0].(bool); ok {
+			isUtc = v
+		}
 	}
 
-	result := TimeToString(datetime, format)
-	currentDate := time.Now()
-	year1, month1, day1 := currentDate.Date()
-	year2, month2, day2 := datetime.Date()
+	if len(args) > 1 {
+		if v, ok := args[1].(string); ok {
+			format = v
+		}
+	}
 
-	dayCount := 0
-	if year1 == year2 {
-		if month1 == month2 {
-			dayCount = day1 - day2
-			if dayCount == 0 {
-				hour := currentDate.Hour() - datetime.Hour()
-				if hour == 0 {
-					minutesCount := currentDate.Minute() - datetime.Minute()
-					if minutesCount == 0 {
-						result = "刚刚"
-					} else {
-						result = fmt.Sprintf("%d分钟前", minutesCount)
-					}
-				} else {
-					result = fmt.Sprintf("%d小时前", hour)
-				}
+	result := TimeToString(datetime.Local(), format)
+	if isUtc {
+		result = TimeToString(datetime.UTC(), format)
+	}
+
+	currentDate := time.Now().UTC()
+	duration := currentDate.Sub(datetime.UTC())
+	hourCount := int(duration.Hours())
+	minuteCount := int(duration.Minutes())
+	dayCount := int(hourCount / 24)
+	monthCount := int(dayCount / 30)
+
+	if monthCount > 24 {
+		if monthCount < 24 {
+			if monthCount == 1 {
+				result = fmt.Sprintf("%s", "上个月")
 			} else {
-				if dayCount > 14 {
-					result = "半个月前"
-				} else if dayCount > 6 {
-					result = "一周前"
+				if monthCount == 6 {
+					result = fmt.Sprintf("%s", "半年前")
 				} else {
-					result = fmt.Sprintf("%d天前", dayCount)
+					result = fmt.Sprintf("%d个月前", monthCount)
 				}
 			}
 		} else {
-			dayCount = int(currentDate.Sub(datetime).Seconds() / 86400)
-			if dayCount >= 90 && dayCount < 120 {
-				result = "3个月前"
-			} else if dayCount >= 60 && dayCount < 90 {
-				result = "2个月前"
-			} else if dayCount >= 30 && dayCount < 60 {
-				result = "1个月前"
+			yearCount := int(monthCount / 12)
+			if yearCount < 5 {
+				result = fmt.Sprintf("%d年前", yearCount)
 			}
+		}
+	} else if dayCount > 0 {
+		if dayCount > 14 {
+			result = "半个月前"
+		} else if dayCount > 6 {
+			result = "一周前"
+		} else {
+			if dayCount == 1 {
+				result = fmt.Sprintf("%s", "昨天")
+			} else {
+				result = fmt.Sprintf("%d天前", dayCount)
+			}
+		}
+	} else if hourCount > 0 {
+		result = fmt.Sprintf("%d小时前", hourCount)
+	} else {
+		if minuteCount > 0 {
+			result = fmt.Sprintf("%d分钟前", minuteCount)
+		} else {
+			result = "刚刚"
 		}
 	}
 
@@ -487,7 +495,7 @@ func TimeStringAddMinutes(timeString string, minutes int) string {
 	format := "15:04:05"
 
 	var timeValue time.Time
-	if time, err := time.ParseInLocation(format, timeString, time.Local); err == nil {
+	if time, err := time.ParseInLocation(format, timeString, time.UTC); err == nil {
 		timeValue = time
 	}
 
@@ -502,14 +510,14 @@ func GetDatetimeForDateAndTimeString(date time.Time, timeString string) time.Tim
 	format := "15:04:05"
 
 	var timeValue time.Time
-	if time, err := time.ParseInLocation(format, timeString, time.Local); err == nil {
+	if time, err := time.ParseInLocation(format, timeString, time.UTC); err == nil {
 		timeValue = time
 	}
 
-	y, m, d := date.Date()
-	h1, m1, s1 := timeValue.Clock()
-	datetime := time.Date(y, m, d, h1, m1, s1, 0, time.Local)
-	return datetime
+	year, month, day := date.UTC().Date()
+	hour, minute, second := timeValue.Clock()
+
+	return time.Date(year, month, day, hour, minute, second, 0, time.UTC)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -548,8 +556,8 @@ func GetCurrentWeek() int {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取指定的日期是周几（1:周一｜2:周二｜...|7:周日）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetWeek(date time.Time) int {
-	nowDate := date
+func GetWeek(datetime time.Time) int {
+	nowDate := datetime
 	days := map[int]int{
 		1: 1,
 		2: 2,
@@ -637,27 +645,52 @@ func CurrentTimeToString(args ...interface{}) string {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 时间转字符串
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func TimeToString(timeValue time.Time, args ...interface{}) string {
+func TimeToString(datetime time.Time, args ...interface{}) string {
 	format := "2006-01-02 15:04:05"
 	if len(args) == 1 {
 		if v, ok := args[0].(string); ok {
 			format = v
 		}
 	}
-	timeStrng := timeValue.Format(format)
+
+	timeStrng := datetime.Format(format)
 	return timeStrng
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 字符串转时间
+ * isUtc参数决定传入的日期字符串是否是utc日期
+ * isUtc:bool | format:string
+ * 返回UTC日期
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func StringToTime(timeString string, args ...interface{}) (time.Time, error) {
+func StringToTime(datetimeString string, args ...interface{}) (time.Time, error) {
+	var retErr error
+	var result time.Time
+
 	format := "2006-01-02 15:04:05"
-	if len(args) == 1 {
-		if v, ok := args[0].(string); ok {
+	isUtc := false
+
+	if len(args) > 0 {
+		if v, ok := args[0].(bool); ok {
+			isUtc = v
+		}
+	}
+
+	if len(args) > 1 {
+		if v, ok := args[1].(string); ok {
 			format = v
 		}
 	}
 
-	return time.ParseInLocation(format, timeString, time.Local)
+	if isUtc {
+		result, retErr = time.ParseInLocation(format, datetimeString, time.UTC)
+	} else {
+		result, retErr = time.ParseInLocation(format, datetimeString, time.Local)
+	}
+
+	if retErr != nil {
+		return result, retErr
+	}
+
+	return result.UTC(), retErr
 }
