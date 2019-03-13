@@ -1,65 +1,35 @@
 package glib
 
-import (
-	"crypto/md5"
-	"crypto/rand"
-	"encoding/binary"
-	"encoding/hex"
-	"fmt"
-	"io"
-	"os"
-	"sync/atomic"
-	"time"
-)
-
 /* ================================================================================
- * ObjectId
+ * snowflake id
+ * qq group: 582452342
+ * email   : 2091938785@qq.com
+ * author  : 美丽的地球啊 - mliu
  * ================================================================================ */
 
-var objectIdCounter uint32 = 0
-var objectIdMachineId = objectMachineId()
+var (
+	snowflakeNodes []*SnowflakeNode
+)
 
-type ObjectId string
-
-func (id ObjectId) Hex() string {
-	return hex.EncodeToString([]byte(id))
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 初始化节点集合
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func init() {
+	snowflakeNodes = make([]*SnowflakeNode, 0, 16)
+	for i := 0; i < 16; i++ {
+		snowflakeNodes = append(snowflakeNodes, NewSnowflake().Node(int64(i)))
+	}
 }
 
-func NewObjectId() ObjectId {
-	var b [12]byte
-	binary.BigEndian.PutUint32(b[:], uint32(time.Now().Unix()))
-
-	b[4] = objectIdMachineId[0]
-	b[5] = objectIdMachineId[1]
-	b[6] = objectIdMachineId[2]
-
-	pid := os.Getpid()
-	b[7] = byte(pid >> 8)
-	b[8] = byte(pid)
-
-	i := atomic.AddUint32(&objectIdCounter, 1)
-	b[9] = byte(i >> 16)
-	b[10] = byte(i >> 8)
-	b[11] = byte(i)
-
-	return ObjectId(b[:])
-}
-
-func objectMachineId() []byte {
-	var sum [3]byte
-	id := sum[:]
-	hostname, err1 := os.Hostname()
-	if err1 != nil {
-		_, err2 := io.ReadFull(rand.Reader, id)
-		if err2 != nil {
-			panic(fmt.Errorf("cannot get hostname: %v; %v", err1, err2))
-		}
-		return id
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取唯一id
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetId(nodeId int) int64 {
+	if nodeId < 0 || nodeId > 16 {
+		nodeId = 0
 	}
 
-	hw := md5.New()
-	hw.Write([]byte(hostname))
-	copy(id, hw.Sum(nil))
+	uniquId := snowflakeNodes[nodeId].Id()
 
-	return id
+	return uniquId.Int64()
 }
