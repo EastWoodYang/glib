@@ -3,7 +3,6 @@ package glib
 import (
 	"encoding/base64"
 	"encoding/binary"
-	"errors"
 	"strconv"
 	"sync"
 	"time"
@@ -70,16 +69,16 @@ func (s *Snowflake) init() {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取节点对象
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Snowflake) Node(nodeId int64) (*SnowflakeNode, error) {
+func (s *Snowflake) Node(nodeId int64) *SnowflakeNode {
 	if nodeId < 0 || nodeId > s.nodeMax {
-		return nil, errors.New("SnowflakeNode number must be between 0 and " + strconv.FormatInt(s.nodeMax, 10))
+		nodeId = 0
 	}
 
 	return &SnowflakeNode{
 		timestamp: 0,
 		nodeId:    nodeId,
 		seq:       0,
-	}, nil
+	}
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
