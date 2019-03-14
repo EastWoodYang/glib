@@ -57,7 +57,7 @@ func GetSeqNumber() string {
  * 获取当前唯一Token字符串
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetTokenString() string {
-	timestamp := UnixTimestamp()
+	timestamp := UnixNanoTimestamp()
 	return Md5(strconv.FormatInt(timestamp, 10))
 }
 

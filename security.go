@@ -308,7 +308,7 @@ func RSADecrypt(cipherData, privateKey []byte) ([]byte, error) {
  * 生成RsaKey
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GenRsaKey(bits int) (string, string, error) {
-	// 生成私钥
+	//私钥
 	privateKey, err := rsa.GenerateKey(crand.Reader, bits)
 	if err != nil {
 		return "", "", err
@@ -372,6 +372,9 @@ func RsaPublicToMultipleLine(privateKey string) string {
 	return privateKey
 }
 
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 将单行的Ras Private字符串格式化为多行格式
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func RsaPrivateToMultipleLine(privateKey string) string {
 	privateKeys := make([]string, 0)
 	privateKeys = append(privateKeys, "-----BEGIN PRIVATE KEY-----")
