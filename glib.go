@@ -425,6 +425,7 @@ func StringInter(one, two []string) []string {
 		for _, v := range one {
 			allMap[v] = true
 		}
+
 		for _, v := range two {
 			if _, isOk := allMap[v]; isOk {
 				allMap[v] = false
