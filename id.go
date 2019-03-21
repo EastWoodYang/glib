@@ -15,21 +15,21 @@ var (
  * 初始化节点集合
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func init() {
-	snowflakeNodes = make([]*SnowflakeNode, 0, 16)
-	for i := 0; i < 16; i++ {
-		snowflakeNodes = append(snowflakeNodes, NewSnowflake().Node(int64(i)))
+	snowflakeNodes = make([]*SnowflakeNode, 0, 1024)
+	for i := 0; i < 1024; i++ {
+		snowflakeNodes = append(snowflakeNodes, NewSnowflake().GetNode(int64(i)))
 	}
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取唯一id
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetId(nodeId int64) int64 {
-	if nodeId < 0 || nodeId > 16 {
-		nodeId = 0
+func GetId(workerNodeId int64, isReset bool) int64 {
+	if workerNodeId < 0 || workerNodeId > 1024 {
+		workerNodeId = 0
 	}
 
-	uniquId := snowflakeNodes[nodeId].Id()
+	uniquId := snowflakeNodes[workerNodeId].GetId(isReset)
 
 	return uniquId.Int64()
 }

@@ -17,9 +17,9 @@ import (
 
 type (
 	Snowflake struct {
-		Epoch    int64
-		NodeBits uint8
-		SeqBits  uint8
+		StartTimestamp int64
+		NodeBits       uint8
+		SeqBits        uint8
 
 		nodeMax   int64
 		nodeMask  int64
@@ -29,10 +29,10 @@ type (
 	}
 
 	SnowflakeNode struct {
-		mu        sync.Mutex
-		timestamp int64
-		nodeId    int64
-		seq       int64
+		mu           sync.Mutex
+		timestamp    int64
+		workerNodeId int64
+		seq          int64
 	}
 
 	SnowflakeId int64
@@ -45,9 +45,9 @@ var snowflake *Snowflake
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func NewSnowflake() *Snowflake {
 	snowflake = &Snowflake{
-		Epoch:    1551377400197,
-		NodeBits: 10,
-		SeqBits:  12,
+		StartTimestamp: 1551377400197,
+		NodeBits:       10,
+		SeqBits:        12,
 	}
 
 	snowflake.init()
@@ -69,44 +69,54 @@ func (s *Snowflake) init() {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取节点对象
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Snowflake) Node(nodeId int64) *SnowflakeNode {
-	if nodeId < 0 || nodeId > s.nodeMax {
-		nodeId = 0
+func (s *Snowflake) GetNode(workerNodeId int64) *SnowflakeNode {
+	if workerNodeId < 0 || workerNodeId > s.nodeMax {
+		workerNodeId = 0
 	}
 
 	return &SnowflakeNode{
-		timestamp: 0,
-		nodeId:    nodeId,
-		seq:       0,
+		timestamp:    0,
+		workerNodeId: workerNodeId,
+		seq:          0,
 	}
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取唯一Id
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (n *SnowflakeNode) Id() SnowflakeId {
+func (n *SnowflakeNode) GetId(args ...bool) SnowflakeId {
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
 	//纳秒转换成毫秒
 	now := time.Now().UnixNano() / 1000000
 
-	if n.timestamp == now {
-		n.seq = (n.seq + 1) & snowflake.seqMask
+	//不同毫秒内是否重置序列号
+	isReset := true
+	if len(args) > 0 {
+		isReset = args[0]
+	}
 
-		if n.seq == 0 {
-			for now <= n.timestamp {
-				now = time.Now().UnixNano() / 1000000
+	if isReset {
+		if n.timestamp == now {
+			n.seq = (n.seq + 1) & snowflake.seqMask
+
+			if n.seq == 0 {
+				for now <= n.timestamp {
+					now = time.Now().UnixNano() / 1000000
+				}
 			}
+		} else {
+			n.seq = 0
 		}
 	} else {
-		n.seq = 0
+		n.seq = (n.seq + 1) & snowflake.seqMask
 	}
 
 	n.timestamp = now
 
-	id := SnowflakeId((now-snowflake.Epoch)<<snowflake.timeShift |
-		(n.nodeId << snowflake.nodeShift) |
+	id := SnowflakeId((now-snowflake.StartTimestamp)<<snowflake.timeShift |
+		(n.workerNodeId << snowflake.nodeShift) |
 		(n.seq),
 	)
 
@@ -114,7 +124,7 @@ func (n *SnowflakeNode) Id() SnowflakeId {
 }
 
 func (f SnowflakeId) Timestamp() int64 {
-	return (int64(f) >> snowflake.timeShift) + snowflake.Epoch
+	return (int64(f) >> snowflake.timeShift) + snowflake.StartTimestamp
 }
 
 func (f SnowflakeId) Node() int64 {
