@@ -20,7 +20,7 @@ import (
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 type (
 	Reflect struct {
-		obj     interface{}
+		target  interface{}
 		typeOf  reflect.Type
 		valueOf reflect.Value
 	}
@@ -53,6 +53,29 @@ type (
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 实例化Reflect
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func NewReflect(target interface{}) *Reflect {
+	r := &Reflect{
+		target: target,
+	}
+
+	if reflect.TypeOf(target).Kind() == reflect.Ptr {
+		r.typeOf = reflect.TypeOf(target).Elem()
+	} else {
+		r.typeOf = reflect.TypeOf(target)
+	}
+
+	if reflect.ValueOf(target).Kind() == reflect.Ptr {
+		r.valueOf = reflect.ValueOf(target).Elem()
+	} else {
+		r.valueOf = reflect.ValueOf(target)
+	}
+
+	return r
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 实例化ReflectFunc
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func NewReflectFunc() *ReflectFunc {
 	r := &ReflectFunc{
 		funcs: make(map[string]interface{}, 0),
@@ -64,24 +87,23 @@ func NewReflectFunc() *ReflectFunc {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 根据结构体和字段名获取对应的包名和字段值
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetFieldByName(model interface{}, fieldName string) (string, string, error) {
+func GetStructFieldValueByName(model interface{}, fieldName string) (string, interface{}, error) {
+	if model == nil || len(fieldName) == 0 {
+		return "", nil, errors.New("argument error")
+	}
+
 	typeOf := reflect.TypeOf(model)
 	if kind := typeOf.Kind(); kind != reflect.Ptr {
-		panic("Model is not a pointer type")
+		panic("target struct is not pointer type")
 	}
 
-	valueElem := reflect.ValueOf(model).Elem()
-
-	if len(fieldName) == 0 {
-		fieldName = "Id"
-	}
-
-	if _, ok := valueElem.Type().FieldByName(fieldName); !ok {
+	valueOf := reflect.ValueOf(model).Elem()
+	if _, ok := valueOf.Type().FieldByName(fieldName); !ok {
 		return "", "", errors.New("fieldname not exists")
 	}
 
-	pkgName := strings.Split(valueElem.String(), " ")[0][1:]
-	fieldValue := valueElem.FieldByName(fieldName).String()
+	pkgName := strings.Split(valueOf.String(), " ")[0][1:]
+	fieldValue := valueOf.FieldByName(fieldName).Interface()
 
 	return pkgName, fieldValue, nil
 }
@@ -123,29 +145,6 @@ func (s *ReflectFunc) Call(key string, args ...interface{}) ([]reflect.Value, er
 	}
 
 	return valueOf.Call(in), nil
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 实例化Reflect
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func NewReflect(obj interface{}) *Reflect {
-	r := &Reflect{
-		obj: obj,
-	}
-
-	if reflect.TypeOf(obj).Kind() == reflect.Ptr {
-		r.typeOf = reflect.TypeOf(obj).Elem()
-	} else {
-		r.typeOf = reflect.TypeOf(obj)
-	}
-
-	if reflect.ValueOf(obj).Kind() == reflect.Ptr {
-		r.valueOf = reflect.ValueOf(obj).Elem()
-	} else {
-		r.valueOf = reflect.ValueOf(obj)
-	}
-
-	return r
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -519,7 +518,7 @@ func (s *Reflect) Methods() []*MethodInfo {
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) Invoke(methodName string, args ...interface{}) ([]reflect.Value, error) {
 	if !s.IsStruct() {
-		return nil, errors.New("obj not struct")
+		return nil, errors.New("target not struct")
 	}
 
 	in := make([]reflect.Value, len(args))
@@ -539,7 +538,7 @@ func (s *Reflect) Invoke(methodName string, args ...interface{}) ([]reflect.Valu
  * 对象信息
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) Interfce() interface{} {
-	return s.obj
+	return s.target
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

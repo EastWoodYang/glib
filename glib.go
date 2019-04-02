@@ -209,6 +209,31 @@ func StringToUint64Slice(sourceString string, args ...string) []uint64 {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 用指定的字符串把源字符串分隔为int64切片
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringToInt64Slice(sourceString string, args ...string) []int64 {
+	result := make([]int64, 0)
+
+	if len(sourceString) == 0 {
+		return result
+	}
+
+	splitString := ","
+	if len(args) == 1 {
+		splitString = args[0]
+	}
+
+	stringSlice := strings.Split(sourceString, splitString)
+	for _, v := range stringSlice {
+		if value, err := strconv.ParseInt(v, 10, 64); err == nil {
+			result = append(result, value)
+		}
+	}
+
+	return result
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 用指定的字符串把源字符串分隔为int切片
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func StringToIntSlice(sourceString string, args ...string) []int {
