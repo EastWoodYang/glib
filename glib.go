@@ -62,6 +62,22 @@ func GetTokenString() string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 判断内容字符串的头尾是否包含指定的字符串
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func HasPrefixSuffix(content, target string) bool {
+	isPrefixSuffix := false
+
+	if len(content) > 0 {
+		isPrefix := strings.HasPrefix(content, target)
+		isSuffix := strings.HasSuffix(content, target)
+
+		isPrefixSuffix = isPrefix && isSuffix
+	}
+
+	return isPrefixSuffix
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取字符串个数（不是字节数）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetStringCount(sourceString string) int {
