@@ -484,9 +484,11 @@ func AddMinutesForCurrent(minutes int) time.Time {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 在指定的日期时间增加指定的分钟数，返回日期时间
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func AddMinutesForDatetime(datetime time.Time, minutes int) time.Time {
+/*
+func AddMinutesForDatetime1(datetime time.Time, minutes int) time.Time {
 	return datetime.Add(time.Duration(minutes) * time.Minute)
 }
+*/
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 时间字符串加指定的分钟数，返回时间字符串
