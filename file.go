@@ -51,6 +51,17 @@ func GetCurrentPath() string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取文件绝对全路径
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetAbsolutePath(filePath string) string {
+	if !strings.HasPrefix(filePath, string(os.PathSeparator)) {
+		filePath = fmt.Sprintf("%s%s%s", GetCurrentPath(), string(os.PathSeparator), filePath)
+	}
+
+	return filePath
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取全文件路径的相对路径
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetRelativePath(fullpath string) string {

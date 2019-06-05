@@ -1,6 +1,7 @@
 package glib
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
@@ -675,7 +676,12 @@ func ToJson(object interface{}) (string, error) {
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func FromJson(jsonString string, object interface{}) error {
 	bytesData := []byte(jsonString)
-	return json.Unmarshal(bytesData, object)
+
+	jsonDecoder := json.NewDecoder(bytes.NewBuffer(bytesData))
+	jsonDecoder.UseNumber()
+
+	return jsonDecoder.Decode(&object)
+	//return json.Unmarshal(bytesData, object)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
