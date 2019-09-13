@@ -79,6 +79,39 @@ func HasPrefixSuffix(content, target string) bool {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串替换
+ * sourceString: 原始字符串
+ * args[0...n-2]: 被替换字符串集合
+ * args[n-1]: 替换字符串
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringReplace(sourceString string, args ...string) string {
+	target := ""
+	replaces := []string{}
+	result := sourceString
+	count := len(args)
+
+	if len(result) > 0 && count > 0 {
+		if count == 1 {
+			replaces = append(replaces, args[0])
+		} else if count > 1 {
+			for index, value := range args {
+				if index == count-1 {
+					target = value
+				} else {
+					replaces = append(replaces, value)
+				}
+			}
+		}
+
+		for _, value := range replaces {
+			result = strings.Replace(result, value, target, -1)
+		}
+	}
+
+	return result
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取字符串个数（不是字节数）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetStringCount(sourceString string) int {
