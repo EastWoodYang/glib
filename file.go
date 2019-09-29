@@ -164,27 +164,27 @@ func GetFileContent(fullFilename string) ([]byte, error) {
  * 获取Http请求里的文件数据
  * maxSize: 文件大小限制，0表示不限制
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetHttpRequestFile(req *http.Request, args ...int64) (*FileInfo, error) {
+func GetHttpRequestFile(req *http.Request, args ...int32) (*FileInfo, error) {
 	//获取请求文件
-	inputFile, fileHeader, err := req.FormFile("file")
+	fileStream, fileHeader, err := req.FormFile("file")
 	if err != nil {
 		return nil, err
 	}
-	defer inputFile.Close()
+	defer fileStream.Close()
 
-	var maxSize int64
+	var maxSize int32
 	if len(args) > 0 {
 		maxSize = args[0]
 	}
 
 	//判断大小是否超出限制
-	size := inputFile.(IFileSize).Size()
-	if maxSize != 0 && size > maxSize {
+	size := fileStream.(IFileSize).Size()
+	if maxSize != 0 && size > int64(maxSize) {
 		return nil, errors.New("file is too large")
 	}
 
 	//读取文件数据到字节切片
-	dataBytes, err := ioutil.ReadAll(inputFile)
+	dataBytes, err := ioutil.ReadAll(fileStream)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -319,7 +319,7 @@ func CutVideoImage(sourceFile, newFilename string, width, height uint64, second,
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 保存Http 上传的文件到磁盘指定目录（返回客户端原文件名，大小，全文件路径，错误）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func SaveHttpFile(req *http.Request, filename, basePath string, maxSize int64, args ...string) (*FileInfo, error) {
+func SaveHttpFile(req *http.Request, filename, basePath string, maxSize int32, args ...string) (*FileInfo, error) {
 	fileInfo, err := GetHttpRequestFile(req, maxSize)
 	if err != nil {
 		return nil, err

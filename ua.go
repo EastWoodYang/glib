@@ -24,18 +24,18 @@ const (
 	UA_DEVICE_MOBILE_ANDROID string = "android phone"
 	UA_DEVICE_MOBILE_WINDOWS string = "windows phone"
 
-	UA_OPERATION_SYSTEM_WINDOWS string = "windows"
-	UA_OPERATION_SYSTEM_MAC     string = "mac"
-	UA_OPERATION_SYSTEM_LINUX   string = "linux"
+	UA_OS_WINDOWS string = "windows"
+	UA_OS_MAC     string = "mac"
+	UA_OS_LINUX   string = "linux"
 
 	UA_UNKNOW string = "unknow"
 )
 
 type (
 	UserAgent struct {
-		device          *UserAgentDevice          //设备
-		operationSystem *UserAgentOperationSystem //操作系统
-		content         string                    //原始内容
+		device  *UserAgentDevice //设备
+		os      *UserAgentOs     //操作系统
+		content string           //原始内容
 	}
 
 	UserAgentDevice struct {
@@ -44,7 +44,7 @@ type (
 		content   string //设备内容
 	}
 
-	UserAgentOperationSystem struct {
+	UserAgentOs struct {
 		name    string // 操作系统名称（windows | mac | linux | unknow）
 		content string //操作系统内容
 	}
@@ -59,7 +59,7 @@ func NewUserAgent(content string) *UserAgent {
 			name:      UA_UNKNOW,
 			childName: UA_UNKNOW,
 		},
-		operationSystem: &UserAgentOperationSystem{
+		os: &UserAgentOs{
 			name: UA_UNKNOW,
 		},
 		content: content,
@@ -79,7 +79,8 @@ func (s *UserAgent) parse() {
 	}
 
 	s.parseDevice()
-	s.parseOperationSystem()
+
+	s.parseOs()
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -101,17 +102,17 @@ func (s *UserAgent) parseDevice() {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 解析操作系统
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgent) parseOperationSystem() {
+func (s *UserAgent) parseOs() {
 	operationName := UA_UNKNOW
 	if strings.Index(s.content, "Windows") > 0 {
-		operationName = UA_OPERATION_SYSTEM_WINDOWS
+		operationName = UA_OS_WINDOWS
 	} else if strings.Index(s.content, "Mac OS") > 0 {
-		operationName = UA_OPERATION_SYSTEM_MAC
+		operationName = UA_OS_MAC
 	} else if strings.Index(s.content, "Linux") > 0 {
-		operationName = UA_OPERATION_SYSTEM_LINUX
+		operationName = UA_OS_LINUX
 	}
 
-	s.operationSystem.name = operationName
+	s.os.name = operationName
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -255,14 +256,14 @@ func (s *UserAgent) GetDevice() *UserAgentDevice {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取操作系统
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgent) GetOperationSystem() *UserAgentOperationSystem {
-	return s.operationSystem
+func (s *UserAgent) GetOs() *UserAgentOs {
+	return s.os
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取原始信息
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgent) GetInfo() string {
+func (s *UserAgent) GetContent() string {
 	return s.content
 }
 
@@ -283,20 +284,20 @@ func (s *UserAgentDevice) GetChildName() string {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取设备信息
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgentDevice) GetInfo() string {
+func (s *UserAgentDevice) GetContent() string {
 	return s.content
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取操作系统名称
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgentOperationSystem) GetName() string {
+func (s *UserAgentOs) GetName() string {
 	return s.name
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取操作系统信息
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgentOperationSystem) GetInfo() string {
+func (s *UserAgentOs) GetContent() string {
 	return s.content
 }

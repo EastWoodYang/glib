@@ -149,6 +149,25 @@ func GetSubString(sourceString string, count int) string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 过滤主机协议
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func FilterHostProtocol(path string) string {
+	if len(path) > 0 {
+		path = strings.Trim(path, " ")
+
+		if paths := StringToStringSlice(path, ":"); len(paths) > 1 {
+			path = paths[1]
+		}
+
+		path = strings.TrimPrefix(path, "//")
+		path = strings.TrimPrefix(path, "/")
+		path = strings.TrimSuffix(path, "/")
+	}
+
+	return path
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取指定个数的uint64slice
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetUint64SliceRange(int64Slice []uint64, count int) []uint64 {
@@ -177,6 +196,21 @@ func ReverseUint64Slice(int64Slice []uint64) {
 	for from, to := 0, len(int64Slice)-1; from < to; from, to = from+1, to-1 {
 		int64Slice[from], int64Slice[to] = int64Slice[to], int64Slice[from]
 	}
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串转换为bool
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringToBool(stringValue string) bool {
+	var boolValue bool = false
+
+	if len(stringValue) > 0 {
+		if stringValue == "1" || strings.ToLower(stringValue) == "true" {
+			boolValue = true
+		}
+	}
+
+	return boolValue
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
