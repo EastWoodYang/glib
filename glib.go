@@ -63,12 +63,38 @@ func GetTokenString() string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 判断内容字符串的头尾是否包含指定的字符串
+ * 判断内容字符串头是否包含指定的字符串
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func HasPrefix(content, target string) bool {
+	isPrefix := false
+
+	if len(content) > 0 && len(target) > 0 {
+		isPrefix = strings.HasPrefix(content, target)
+	}
+
+	return isPrefix
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 判断内容字符串尾是否包含指定的字符串
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func HasSuffix(content, target string) bool {
+	isSuffix := false
+
+	if len(content) > 0 && len(target) > 0 {
+		isSuffix = strings.HasSuffix(content, target)
+	}
+
+	return isSuffix
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 判断内容字符串头尾是否包含指定的字符串
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func HasPrefixSuffix(content, target string) bool {
 	isPrefixSuffix := false
 
-	if len(content) > 0 {
+	if len(content) > 0 && len(target) > 0 {
 		isPrefix := strings.HasPrefix(content, target)
 		isSuffix := strings.HasSuffix(content, target)
 
@@ -124,27 +150,47 @@ func GetStringCount(sourceString string) int {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取指定长度的字符串
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetSubString(sourceString string, count int) string {
+func GetSubString(sourceString string, count int, args ...string) string {
 	if len(sourceString) <= count {
 		return sourceString
 	}
 
 	newString, sourceStringRune := "", []rune(sourceString)
 	sl, rl := 0, 0
+
+	more := ""
+	isRune := true
+
+	if len(args) > 0 {
+		more = args[0]
+	}
+
 	for _, r := range sourceStringRune {
-		rint := int(r)
-		if rint < 128 {
+		if isRune {
 			rl = 1
 		} else {
-			rl = 2
+			if int(r) < 128 {
+				rl = 1
+			} else {
+				rl = 2
+			}
 		}
 
 		if sl+rl > count {
 			break
 		}
+
 		sl += rl
+
 		newString += string(r)
 	}
+
+	if sl < len(sourceStringRune) {
+		if len(more) > 0 {
+			newString += more
+		}
+	}
+
 	return newString
 }
 
@@ -463,34 +509,8 @@ func StringSliceLatest(srcSlice []string, maxCount int) []string {
  * 过滤uint64数组（从all中过滤所有other中的数据，返回未被过滤的数据集合）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func FilterUint64Slice(all, other []uint64) []uint64 {
-	allMap := make(map[uint64]bool, 0)
-	diffSet := make([]uint64, 0)
-
-	for _, a_v := range all {
-		allMap[a_v] = true
-	}
-
-	for _, a_v := range other {
-		if _, isOk := allMap[a_v]; isOk {
-			allMap[a_v] = false
-		}
-	}
-
-	for k, v := range allMap {
-		if v {
-			diffSet = append(diffSet, k)
-		}
-	}
-
-	return diffSet
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 过滤字符数组（从all中过滤所有other中的数据，返回未被过滤的数据集合）
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func FilterStringSlice(all, other []string) []string {
-	allMaps := make(map[string]bool, 0)
-	diffSet := make([]string, 0)
+	allMaps := make(map[uint64]bool, 0)
+	sliceResult := make([]uint64, 0)
 
 	for _, v := range all {
 		allMaps[v] = true
@@ -502,13 +522,39 @@ func FilterStringSlice(all, other []string) []string {
 		}
 	}
 
-	for k, v := range allMaps {
-		if v {
-			diffSet = append(diffSet, k)
+	for _, v := range all {
+		if allMaps[v] {
+			sliceResult = append(sliceResult, v)
 		}
 	}
 
-	return diffSet
+	return sliceResult
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 过滤字符数组（从all中过滤所有other中的数据，返回未被过滤的数据集合）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func FilterStringSlice(all, other []string) []string {
+	allMaps := make(map[string]bool, 0)
+	sliceResult := make([]string, 0)
+
+	for _, v := range all {
+		allMaps[v] = true
+	}
+
+	for _, v := range other {
+		if _, isOk := allMaps[v]; isOk {
+			allMaps[v] = false
+		}
+	}
+
+	for _, v := range all {
+		if allMaps[v] {
+			sliceResult = append(sliceResult, v)
+		}
+	}
+
+	return sliceResult
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
