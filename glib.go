@@ -305,7 +305,7 @@ func StringToFloat64(stringValue string) float64 {
 		return floatValue
 	}
 
-	floatValue, err := strconv.ParseFloat(stringValue, 10)
+	floatValue, err := strconv.ParseFloat(stringValue, 64)
 	if err != nil {
 		return 0.0
 	}
