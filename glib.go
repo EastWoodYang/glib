@@ -506,6 +506,32 @@ func StringSliceLatest(srcSlice []string, maxCount int) []string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 过滤int64数组（从all中过滤所有other中的数据，返回未被过滤的数据集合）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func FilterInt64Slice(all, other []int64) []int64 {
+	allMaps := make(map[int64]bool, 0)
+	sliceResult := make([]int64, 0)
+
+	for _, v := range all {
+		allMaps[v] = true
+	}
+
+	for _, v := range other {
+		if _, isOk := allMaps[v]; isOk {
+			allMaps[v] = false
+		}
+	}
+
+	for _, v := range all {
+		if allMaps[v] {
+			sliceResult = append(sliceResult, v)
+		}
+	}
+
+	return sliceResult
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 过滤uint64数组（从all中过滤所有other中的数据，返回未被过滤的数据集合）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func FilterUint64Slice(all, other []uint64) []uint64 {
@@ -633,6 +659,85 @@ func StringDiff(one, two []string) []string {
 
 	//差集合
 	diff := FilterStringSlice(union, inter)
+
+	return diff
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * int64交集合
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Int64Inter(one, two []int64) []int64 {
+	allMap := make(map[int64]bool, 0)
+	interSet := make([]int64, 0)
+
+	if len(one) == 0 && len(two) == 0 {
+		return interSet
+	}
+
+	if len(one) == 0 {
+		for _, v := range two {
+			allMap[v] = true
+		}
+	} else if len(two) == 0 {
+		for _, v := range one {
+			allMap[v] = true
+		}
+	} else {
+		for _, v := range one {
+			allMap[v] = true
+		}
+		for _, v := range two {
+			if _, isOk := allMap[v]; isOk {
+				allMap[v] = false
+			}
+		}
+	}
+
+	for k, v := range allMap {
+		if !v {
+			interSet = append(interSet, k)
+		}
+	}
+
+	return interSet
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * int64并集合
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Int64Union(one, two []int64) []int64 {
+	allMap := make(map[int64]int64, 0)
+	union := make([]int64, 0)
+
+	for _, v := range one {
+		allMap[v] = v
+	}
+
+	for _, v := range two {
+		if _, isOk := allMap[v]; !isOk {
+			allMap[v] = v
+		}
+	}
+
+	for _, v := range allMap {
+		union = append(union, v)
+	}
+
+	return union
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * int64差集合
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Int64Diff(one, two []int64) []int64 {
+	//并集合
+	union := Int64Union(one, two)
+
+	//交集合
+	inter := Int64Inter(one, two)
+
+	//差集合
+	diff := FilterInt64Slice(union, inter)
 
 	return diff
 }
