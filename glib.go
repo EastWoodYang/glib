@@ -437,6 +437,38 @@ func Uint64SliceToString(uintSlice []uint64, args ...string) string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 用指定的字符串把int64切片链接为字符串
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Int64SliceToString(intSlice []int64, args ...string) string {
+	result := ""
+
+	if len(intSlice) == 0 {
+		return result
+	}
+
+	joinString := ","
+	if len(args) == 1 {
+		joinString = args[0]
+	}
+
+	count := len(intSlice)
+	if count == 1 {
+		result = fmt.Sprintf("%d", intSlice[0])
+	} else if count > 1 {
+		for _, value := range intSlice {
+			valueString := fmt.Sprintf("%d", value)
+			if len(result) == 0 {
+				result = result + valueString
+			} else {
+				result = result + joinString + valueString
+			}
+		}
+	}
+
+	return result
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 用指定的字符串分隔源字符串为字符串切片
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func StringToStringSlice(sourceString string, args ...string) []string {
