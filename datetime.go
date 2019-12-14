@@ -489,13 +489,18 @@ func AddMinutesForCurrent(minutes int) time.Time {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 在指定的日期时间增加指定的分钟数，返回日期时间
+ * 在当前的日期时间增加指定的小时数，返回日期时间
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-/*
-func AddMinutesForDatetime1(datetime time.Time, minutes int) time.Time {
-	return datetime.Add(time.Duration(minutes) * time.Minute)
+func AddHoursForCurrent(hours int) time.Time {
+	return time.Now().Add(time.Duration(hours) * time.Hour)
 }
-*/
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 在当前的日期时间增加指定的天数，返回日期时间
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func AddDaysForCurrent(days int) time.Time {
+	return AddHoursForCurrent(days * 24)
+}
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 时间字符串加指定的分钟数，返回时间字符串

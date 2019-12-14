@@ -6,7 +6,7 @@ import (
 )
 
 /* ================================================================================
- * 常用
+ * html
  * qq group: 582452342
  * email   : 2091938785@qq.com
  * author  : 美丽的地球啊 - mliu
@@ -15,37 +15,15 @@ import (
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 安全字符串
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func SafeString(source string, args ...bool) string {
+func SafeString(source string) string {
 	if source == "" {
 		return source
 	}
 
-	isFilterHtmlTag := true
-	isFilterSql := true
-	argCount := len(args)
-	if argCount > 0 {
-		if argCount == 1 {
-			isFilterHtmlTag = args[0]
-		}
-		if argCount > 1 {
-			isFilterSql = args[1]
-		}
-	}
+	source = HtmlTagFilter(source)
+	source = HtmlEncode(source)
 
-	content := ""
-	if isFilterHtmlTag || isFilterSql {
-		if isFilterHtmlTag {
-			content = HtmlTagFilter(source)
-		}
-
-		if isFilterSql {
-			content = SqlFilter(source)
-		}
-	}
-
-	content = HtmlEncode(source)
-
-	return content
+	return source
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -56,18 +34,21 @@ func SafeParam(source string) string {
 		return source
 	}
 
-	content := SqlFilter(source)
-	return content
+	source = HtmlTagFilter(source)
+	source = SqlFilter(source)
+
+	return source
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * html编码
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func HtmlEncode(source string) string {
-	result := source
-	if result == "" {
-		return ""
+	if source == "" {
+		return source
 	}
+
+	content := source
 
 	all := make(map[string]string, 0)
 	all[">"] = "&lt;"
@@ -78,20 +59,21 @@ func HtmlEncode(source string) string {
 	//all[" "] = "&nbsp;"
 
 	for k, v := range all {
-		result = strings.Replace(result, k, v, -1)
+		content = strings.Replace(content, k, v, -1)
 	}
 
-	return result
+	return content
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * html解码
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func HtmlDecode(source string) string {
-	result := source
-	if result == "" {
-		return ""
+	if source == "" {
+		return source
 	}
+
+	content := source
 
 	all := make(map[string]string, 0)
 	all[">"] = "&lt;"
@@ -102,14 +84,14 @@ func HtmlDecode(source string) string {
 	//all[" "] = "&nbsp;"
 
 	for k, v := range all {
-		result = strings.Replace(result, v, k, -1)
+		content = strings.Replace(content, v, k, -1)
 	}
 
 	for k, v := range all {
-		result = strings.Replace(result, v, k, -1)
+		content = strings.Replace(content, v, k, -1)
 	}
 
-	return result
+	return content
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -126,7 +108,7 @@ func HtmlTagFilter(source string) string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 过滤html 链接标签
+ * 过滤html超链接标签
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func HtmlHyperLinkFilter(source string) string {
 	if source == "" {
@@ -209,7 +191,7 @@ func HtmlScriptFilter(source string) string {
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 过滤markdown img标记
- * ![](http://img.woshiyiren.com/s/1/000002/wKgAA1oAjnCAOrkgAADQl5vsv_s123.jpg)
+ * ![](http://a.b.com/s/1/000002/wKgAA1oAjnCAOrkgAADQl5vsv_s123.jpg)
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func MarkdownImageFilter(source string) string {
 	if source == "" {

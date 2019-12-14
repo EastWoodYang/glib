@@ -10,19 +10,18 @@ import (
  * email   : 2091938785@qq.com
  * author  : 美丽的地球啊 - mliu
  * ================================================================================ */
-
 const (
 	UA_DEVICE_PC string = "pc"
 
 	UA_DEVICE_TABLE             string = "table"
 	UA_DEVICE_TABLE_IPAD        string = "ipad"
 	UA_DEVICE_TABLE_IPOD        string = "ipod"
-	UA_DEVICE_TABLE_ANDROID_PAD string = "android pad"
+	UA_DEVICE_TABLE_ANDROID_PAD string = "apad"
 
 	UA_DEVICE_MOBILE         string = "mobile"
 	UA_DEVICE_MOBILE_IPHONE  string = "iphone"
-	UA_DEVICE_MOBILE_ANDROID string = "android phone"
-	UA_DEVICE_MOBILE_WINDOWS string = "windows phone"
+	UA_DEVICE_MOBILE_ANDROID string = "android"
+	UA_DEVICE_MOBILE_WINDOWS string = "winphone"
 
 	UA_OS_WINDOWS string = "windows"
 	UA_OS_MAC     string = "mac"
@@ -33,9 +32,9 @@ const (
 
 type (
 	UserAgent struct {
-		device  *UserAgentDevice //设备
-		os      *UserAgentOs     //操作系统
-		content string           //原始内容
+		device  UserAgentDevice //设备
+		os      UserAgentOs     //操作系统
+		content string          //原始内容
 	}
 
 	UserAgentDevice struct {
@@ -55,11 +54,11 @@ type (
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func NewUserAgent(content string) *UserAgent {
 	userAgent := &UserAgent{
-		device: &UserAgentDevice{
+		device: UserAgentDevice{
 			name:      UA_UNKNOW,
 			childName: UA_UNKNOW,
 		},
-		os: &UserAgentOs{
+		os: UserAgentOs{
 			name: UA_UNKNOW,
 		},
 		content: content,
@@ -249,14 +248,14 @@ func (s *UserAgent) IsOperaBrowser() bool {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取设备
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgent) GetDevice() *UserAgentDevice {
+func (s *UserAgent) GetDevice() UserAgentDevice {
 	return s.device
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取操作系统
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgent) GetOs() *UserAgentOs {
+func (s *UserAgent) GetOs() UserAgentOs {
 	return s.os
 }
 
@@ -270,34 +269,34 @@ func (s *UserAgent) GetContent() string {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取设备名称
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgentDevice) GetName() string {
+func (s UserAgentDevice) GetName() string {
 	return s.name
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取设备子名称
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgentDevice) GetChildName() string {
+func (s UserAgentDevice) GetChildName() string {
 	return s.childName
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取设备信息
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgentDevice) GetContent() string {
+func (s UserAgentDevice) GetContent() string {
 	return s.content
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取操作系统名称
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgentOs) GetName() string {
+func (s UserAgentOs) GetName() string {
 	return s.name
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取操作系统信息
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *UserAgentOs) GetContent() string {
+func (s UserAgentOs) GetContent() string {
 	return s.content
 }
