@@ -1,5 +1,10 @@
 package glib
 
+import (
+	"fmt"
+	"strings"
+)
+
 /* ================================================================================
  * 音乐
  * qq group: 582452342
@@ -8,12 +13,12 @@ package glib
  * ================================================================================ */
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 音名转唱名
+ * 12音名转唱名
  * "C","#C","D","#D","E","F","#F","G","#G","A","#A","B"
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func MusicNamesToSingNames(musicCodes []string) []string {
-	singCodes := make([]string, 0)
-	musicTables := map[string]string{
+func MusicNamesToSingNames(musicNames []string) []string {
+	singNames := make([]string, 0)
+	nameTables := map[string]string{
 		"C":  "1",
 		"#C": "2",
 		"bD": "2",
@@ -33,11 +38,60 @@ func MusicNamesToSingNames(musicCodes []string) []string {
 		"B":  "12",
 	}
 
-	for _, music := range musicCodes {
-		if sing, isOk := musicTables[string(music)]; isOk {
-			singCodes = append(singCodes, sing)
+	for _, musicName := range musicNames {
+		if singName, isOk := nameTables[string(musicName)]; isOk {
+			singNames = append(singNames, singName)
 		}
 	}
 
-	return singCodes
+	return singNames
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取音名五线谱位置索引
+ * 11
+ * --------------------- 10
+ * 9
+ * --------------------- 8
+ * 7
+ * --------------------- 6
+ * 5
+ * --------------------- 4
+ * 3
+ * --------------------- 2
+ * 1
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetMusicNameLocations(musicName string) []int {
+	if len(musicName) == 1 {
+		musicName = strings.ToUpper(musicName)
+	} else if len(musicName) == 2 {
+		musicName = fmt.Sprintf("%s%s", strings.ToLower(string(musicName[0])), strings.ToUpper(string(musicName[1])))
+	}
+
+	nameLocationTables := make(map[string][]int, 0)
+	nameLocationTables["bC"] = []int{7}
+	nameLocationTables["C"] = []int{7}
+	nameLocationTables["#C"] = []int{7}
+	nameLocationTables["bD"] = []int{1, 8}
+	nameLocationTables["D"] = []int{1, 8}
+	nameLocationTables["#D"] = []int{1, 8}
+	nameLocationTables["bE"] = []int{2, 9}
+	nameLocationTables["E"] = []int{2, 9}
+	nameLocationTables["F"] = []int{3, 10}
+	nameLocationTables["#F"] = []int{3, 10}
+	nameLocationTables["bG"] = []int{4, 11}
+	nameLocationTables["G"] = []int{4, 11}
+	nameLocationTables["#G"] = []int{4, 11}
+	nameLocationTables["bA"] = []int{5}
+	nameLocationTables["A"] = []int{5}
+	nameLocationTables["#A"] = []int{5}
+	nameLocationTables["bB"] = []int{6}
+	nameLocationTables["B"] = []int{6}
+
+	locationIndexs := make([]int, 0)
+	if locations, isOk := nameLocationTables[musicName]; isOk {
+		locationIndexs = locations
+	}
+
+	return locationIndexs
 }

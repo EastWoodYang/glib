@@ -538,6 +538,29 @@ func StringSliceLatest(srcSlice []string, maxCount int) []string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 判断字符串切片是否匹配指定的大小
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func IsStringSliceCountMatch(srcSlice []string, totalCount, itemCount int) bool {
+	isCountMatch := true
+	srcCount := len(srcSlice)
+
+	if srcCount > 0 {
+		if srcCount > totalCount {
+			isCountMatch = false
+		}
+
+		for _, stringItem := range srcSlice {
+			if GetStringCount(stringItem) > itemCount {
+				isCountMatch = false
+				break
+			}
+		}
+	}
+
+	return isCountMatch
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 过滤int64数组（从all中过滤所有other中的数据，返回未被过滤的数据集合）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func FilterInt64Slice(all, other []int64) []int64 {
