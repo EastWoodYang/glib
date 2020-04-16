@@ -248,12 +248,14 @@ func ReverseUint64Slice(int64Slice []uint64) {
  * 字符串转换为bool
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func StringToBool(stringValue string) bool {
-	var boolValue bool = false
+	var boolValue bool = true
 
-	if len(stringValue) > 0 {
-		if stringValue == "1" || strings.ToLower(stringValue) == "true" {
-			boolValue = true
-		}
+	if len(stringValue) == 0 ||
+		stringValue == "0" ||
+		strings.ToLower(stringValue) == "f" ||
+		strings.ToLower(stringValue) == "false" {
+
+		boolValue = false
 	}
 
 	return boolValue
@@ -538,26 +540,26 @@ func StringSliceLatest(srcSlice []string, maxCount int) []string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 判断字符串切片是否匹配指定的大小
+ * 判断字符串切片及单个项的字符数是否匹配指定大小，
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func IsStringSliceCountMatch(srcSlice []string, totalCount, itemCount int) bool {
-	isCountMatch := true
-	srcCount := len(srcSlice)
+func IsMatchStringSliceCount(srcSlice []string, maxCount, stringItemCount int) bool {
+	isMatch := true
+	srcSliceCount := len(srcSlice)
 
-	if srcCount > 0 {
-		if srcCount > totalCount {
-			isCountMatch = false
+	if srcSliceCount > 0 {
+		if srcSliceCount > maxCount {
+			isMatch = false
 		}
 
 		for _, stringItem := range srcSlice {
-			if GetStringCount(stringItem) > itemCount {
-				isCountMatch = false
+			if GetStringCount(stringItem) > stringItemCount {
+				isMatch = false
 				break
 			}
 		}
 	}
 
-	return isCountMatch
+	return isMatch
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

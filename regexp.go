@@ -181,6 +181,51 @@ func SqlFilter(source string) string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 身份证号过滤
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func IdCardNumFilter(source string) string {
+	if source == "" {
+		return source
+	}
+
+	pattern := "\\d{15}$|^\\d{18}$|^\\d{17}(\\d|X|x)"
+
+	re, _ := regexp.Compile(pattern)
+
+	return re.ReplaceAllString(source, "")
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 电子邮件过滤
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func EmailFilter(source string) string {
+	if source == "" {
+		return source
+	}
+
+	pattern := "[a-zA-Z0-9]{1}[a-zA-Z0-9_-]*@[a-zA-Z0-9]{1}[a-zA-Z0-9_-]{0,}(\\.[a-zA-Z]+)+"
+
+	re, _ := regexp.Compile(pattern)
+
+	return re.ReplaceAllString(source, "")
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 手机号过滤
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func MobileFilter(source string) string {
+	if source == "" {
+		return source
+	}
+
+	pattern := "0?(\\d{2})?1[3|4|5|6|7|8|9][0-9]\\d{8}"
+
+	re, _ := regexp.Compile(pattern)
+
+	return re.ReplaceAllString(source, "")
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 去除连续的换行符
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func TrimSpaceLine(source string) string {

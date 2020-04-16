@@ -43,9 +43,14 @@ func SafeParam(source string) string {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * html编码
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func HtmlEncode(source string) string {
+func HtmlEncode(source string, args ...bool) string {
 	if source == "" {
 		return source
+	}
+
+	isSpace := false
+	if len(args) > 0 {
+		isSpace = args[0]
 	}
 
 	content := source
@@ -56,7 +61,10 @@ func HtmlEncode(source string) string {
 	all["&"] = "&amp;"
 	all["\""] = "&quot;"
 	all["'"] = "&#39;"
-	//all[" "] = "&nbsp;"
+
+	if isSpace {
+		all[" "] = "&nbsp;"
+	}
 
 	for k, v := range all {
 		content = strings.Replace(content, k, v, -1)
@@ -68,9 +76,14 @@ func HtmlEncode(source string) string {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * html解码
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func HtmlDecode(source string) string {
+func HtmlDecode(source string, args ...bool) string {
 	if source == "" {
 		return source
+	}
+
+	isSpace := false
+	if len(args) > 0 {
+		isSpace = args[0]
 	}
 
 	content := source
@@ -81,10 +94,9 @@ func HtmlDecode(source string) string {
 	all["&"] = "&amp;"
 	all["\""] = "&quot;"
 	all["'"] = "&#39;"
-	//all[" "] = "&nbsp;"
 
-	for k, v := range all {
-		content = strings.Replace(content, v, k, -1)
+	if isSpace {
+		all[" "] = "&nbsp;"
 	}
 
 	for k, v := range all {

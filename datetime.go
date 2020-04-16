@@ -118,15 +118,17 @@ func GetUtcNow() time.Time {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前年月日的整型数字值
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetCurrentYearMonthDay(args ...string) int {
+func GetDateYearMonthDay(args ...time.Time) int {
 	var yearMonthDay int
 
 	format := "20060102"
+	date := time.Now()
+
 	if len(args) > 0 {
-		format = args[0]
+		date = args[0]
 	}
 
-	yearMonthDayString := TimeToString(time.Now(), format)
+	yearMonthDayString := TimeToString(date, format)
 	if _yearMonthDay, err := strconv.Atoi(yearMonthDayString); err == nil {
 		yearMonthDay = _yearMonthDay
 	}
@@ -242,7 +244,7 @@ func GetMinDate(dtTime time.Time) time.Time {
  * 返回日期的最大日期时间（2016-01-02 23:59:59 999999999）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func GetMaxDate(dtTime time.Time) time.Time {
-	year, month, day := dtTime.Date()
+	year, month, day := dtTime.UTC().Date()
 	return time.Date(int(year), time.Month(month), int(day), 23, 59, 59, 999999999, time.UTC)
 }
 
@@ -263,20 +265,80 @@ func GetMaxDateTimestamp(dtTime time.Time) int64 {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取日期的最小日期时间戳，单位纳秒
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetMinDateNanoTimestamp(dtTime time.Time) int64 {
+	minTime := GetMinDate(dtTime)
+	return DateToUnixNanoTimestamp(minTime)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取日期的最大日期时间戳，单位纳秒
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetMaxDateNanoTimestamp(dtTime time.Time) int64 {
+	maxTime := GetMaxDate(dtTime)
+	return DateToUnixNanoTimestamp(maxTime)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当月里最小日期时间（2016-01-01 0:0:0 0）
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentMonthMinDate(args ...time.Time) time.Time {
+	date := time.Now()
+	if len(args) > 0 {
+		date = args[0]
+	}
+
+	year, month, _ := date.Date()
+
+	return time.Date(int(year), time.Month(month), int(1), 0, 0, 0, 0, time.Local)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当月里最大日期时间（2016-01-02 23:59:59 999999999）
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetCurrentMonthMaxDate() time.Time {
-	daysForMonth := GetCurrentDayCount()
-	year, month, _ := time.Now().Date()
+func GetCurrentMonthMaxDate(args ...time.Time) time.Time {
+	date := time.Now()
+	if len(args) > 0 {
+		date = args[0]
+	}
+
+	daysForMonth := GetCurrentDayCount(args...)
+
+	year, month, _ := date.Date()
 	return time.Date(int(year), time.Month(month), int(daysForMonth), 23, 59, 59, 999999999, time.Local)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当月里最小日期时间戳(当月第一天最小时间)，单位秒
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentMonthMinTimestamp(args ...time.Time) int64 {
+	minTimeForMonthFirstDay := GetCurrentMonthMinDate(args...)
+	return DateToUnixTimestamp(minTimeForMonthFirstDay)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当月里最大日期时间戳(当月最后一天最大时间)，单位秒
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetCurrentMonthMaxTimestamp() int64 {
-	maxTimeForMonthLastDay := GetCurrentMonthMaxDate()
+func GetCurrentMonthMaxTimestamp(args ...time.Time) int64 {
+	maxTimeForMonthLastDay := GetCurrentMonthMaxDate(args...)
 	return DateToUnixTimestamp(maxTimeForMonthLastDay)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当月里最小日期时间戳(当月第一天最小时间)，单位纳秒
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentMonthMinNanoTimestamp(args ...time.Time) int64 {
+	minTimeForMonthFirstDay := GetCurrentMonthMinDate(args...)
+	return DateToUnixNanoTimestamp(minTimeForMonthFirstDay)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取当月里最大日期时间戳(当月最后一天最大时间)，单位纳秒
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func GetCurrentMonthMaxNanoTimestamp(args ...time.Time) int64 {
+	maxTimeForMonthLastDay := GetCurrentMonthMaxDate(args...)
+	return DateToUnixNanoTimestamp(maxTimeForMonthLastDay)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -537,8 +599,13 @@ func GetDatetimeForDateAndTimeString(date time.Time, timeString string) time.Tim
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取当前日期月份对应的天数
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetCurrentDayCount() int {
-	return GetDayCount(time.Now())
+func GetCurrentDayCount(args ...time.Time) int {
+	date := time.Now()
+	if len(args) > 0 {
+		date = args[0]
+	}
+
+	return GetDayCount(date)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
