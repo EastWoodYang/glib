@@ -262,6 +262,42 @@ func StringToBool(stringValue string) bool {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串转换为int32
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringToInt32(stringValue string) int32 {
+	var intValue int64 = 0
+
+	if len(stringValue) == 0 {
+		return int32(intValue)
+	}
+
+	intValue, err := strconv.ParseInt(stringValue, 10, 32)
+	if err != nil {
+		return 0
+	}
+
+	return int32(intValue)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串转换为uint32
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringToUint32(stringValue string) uint32 {
+	var uintValue uint64 = 0
+
+	if len(stringValue) == 0 {
+		return uint32(uintValue)
+	}
+
+	uintValue, err := strconv.ParseUint(stringValue, 10, 32)
+	if err != nil {
+		return 0
+	}
+
+	return uint32(uintValue)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 字符串转换为uint64
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func StringToUint64(stringValue string) uint64 {
