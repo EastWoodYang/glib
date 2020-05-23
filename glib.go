@@ -427,6 +427,70 @@ func StringToIntSlice(sourceString string, args ...string) []int {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串切片转为整型64切片
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringSliceToInt64Slice(values []string) []int64 {
+	results := make([]int64, 0)
+
+	for _, value := range values {
+		valueInt64 := StringToInt64(value)
+		results = append(results, valueInt64)
+	}
+
+	return results
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串切片转为无符号整型64切片
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func StringSliceToUint64Slice(values []string) []uint64 {
+	results := make([]uint64, 0)
+
+	for _, value := range values {
+		valueInt64 := StringToUint64(value)
+		results = append(results, valueInt64)
+	}
+
+	return results
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 整型64切片转为字符串切片
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Int64SliceToStringSlice(values []int64) []string {
+	results := make([]string, 0)
+
+	for _, value := range values {
+		valueString := Int64ToString(value)
+		results = append(results, valueString)
+	}
+
+	return results
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 无符号整型64切片转为字符串切片
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Uint64SliceToStringSlice(values []uint64) []string {
+	results := make([]string, 0)
+
+	for _, value := range values {
+		valueString := Uint64ToString(value)
+		results = append(results, valueString)
+	}
+
+	return results
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 无符号整型64转为字符串
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Uint64ToString(value uint64) string {
+	result := fmt.Sprintf("%d", value)
+	return result
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 整型64转为字符串
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func Int64ToString(value int64) string {
