@@ -19,6 +19,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"hash/maphash"
 	"io"
 	"strings"
@@ -35,10 +36,38 @@ import (
  * 字符串哈希返回uint64数值
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func Hash(content string) uint64 {
+	return Fnv64Hash(content)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串map哈希返回uint64数值
+ * 同一个输入字符串每次MapHash返回值会动态变化
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Map64Hash(content string) uint64 {
 	var mHash maphash.Hash
-	mHash.WriteString(content)
+	mHash.Write([]byte(content))
 
 	return mHash.Sum64()
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串fnv哈希返回uint32数值
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Fnv32Hash(content string) uint32 {
+	fHash := fnv.New32()
+	fHash.Write([]byte(content))
+
+	return fHash.Sum32()
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 字符串fnv哈希返回uint64数值
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func Fnv64Hash(content string) uint64 {
+	fHash := fnv.New64()
+	fHash.Write([]byte(content))
+
+	return fHash.Sum64()
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

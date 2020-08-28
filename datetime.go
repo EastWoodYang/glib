@@ -365,6 +365,50 @@ func GetDatetimeWeekString(datetime time.Time) string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 月份数值集合转换成季节名集合
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func MonthsToSeasons(months []int32) []string {
+	seasonDatas := make(map[string]bool, 0)
+	seasonNames := make([]string, 0)
+
+    seasons := map[string][]int32{
+    	"spring": []int32{1,2,3},
+    	"summer": []int32{4,5,6},
+    	"autumn": []int32{7,8,9},
+    	"winter": []int32{10,11,12},
+    }
+
+    for _, month := range months {
+    	seasonName := ""
+
+        for k, v1 := range seasons {
+        	isFound := false
+    	    for _, v2  := range v1 {
+                if v2 == month {
+                    seasonName = k
+                    isFound = true
+                    break
+                }
+    	    }
+
+    	    if isFound {
+    	    	break
+    	    }
+        }
+
+        if _, isOk := seasonDatas[seasonName]; !isOk {
+        	seasonDatas[seasonName] = true
+        }
+    }
+
+    for seasonName, _ := range seasonDatas {
+    	seasonNames = append(seasonNames, seasonName)
+    }
+
+    return seasonNames
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 日期时间转换成友好的显示字符串
  * isUtc:bool | format:string
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
