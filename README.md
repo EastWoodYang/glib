@@ -1,17 +1,19 @@
 # glib
 golang general library
 
-GLib Common Api
+# glib common api
 ===========================
-
 * string
+* number
 * datetime
+* set
+* slice
 * rand
 * regexp
 * file
 * html
 * http
+* encode
 * security 
-* keyword filter
-* qr
+* reflect
 ---------------------------

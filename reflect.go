@@ -9,7 +9,7 @@ import (
 )
 
 /* ================================================================================
- * Oauth Qq
+ * 反射
  * qq group: 582452342
  * email   : 2091938785@qq.com
  * author  : 美丽的地球啊 - mliu
@@ -21,6 +21,8 @@ import (
 type (
 	Reflect struct {
 		target  interface{}
+		rawTypeOf reflect.Type
+		rawValueOf reflect.Value
 		typeOf  reflect.Type
 		valueOf reflect.Value
 	}
@@ -32,9 +34,10 @@ type (
 	FieldInfo struct {
 		Index     []int
 		Name      string
-		Tag       map[string]interface{}
+		Kind      string
 		Type      string
 		Value     reflect.Value
+		Tag       reflect.StructTag
 		Interface interface{}
 		Childs    []*FieldInfo
 	}
@@ -54,20 +57,23 @@ type (
  * 实例化Reflect
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func NewReflect(target interface{}) *Reflect {
+	tf := reflect.TypeOf(target)
+	vf := reflect.ValueOf(target)
+
 	r := &Reflect{
-		target: target,
+		target:     target,
+		typeOf:     tf,
+		valueOf:    vf,
+		rawTypeOf:  tf,
+		rawValueOf: vf,
 	}
 
-	if reflect.TypeOf(target).Kind() == reflect.Ptr {
-		r.typeOf = reflect.TypeOf(target).Elem()
-	} else {
-		r.typeOf = reflect.TypeOf(target)
+	if r.rawTypeOf.Kind() == reflect.Ptr {
+		r.typeOf = r.rawTypeOf.Elem()
 	}
 
-	if reflect.ValueOf(target).Kind() == reflect.Ptr {
-		r.valueOf = reflect.ValueOf(target).Elem()
-	} else {
-		r.valueOf = reflect.ValueOf(target)
+	if r.rawValueOf.Kind() == reflect.Ptr {
+		r.valueOf = r.rawValueOf.Elem()
 	}
 
 	return r
@@ -87,17 +93,18 @@ func NewReflectFunc() *ReflectFunc {
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 根据结构体和字段名获取对应的包名和字段值
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func GetStructFieldValueByName(model interface{}, fieldName string) (string, interface{}, error) {
-	if model == nil || len(fieldName) == 0 {
+func GetStructFieldValueByName(target interface{}, fieldName string) (string, interface{}, error) {
+	if target == nil || len(fieldName) == 0 {
 		return "", nil, errors.New("argument error")
 	}
 
-	typeOf := reflect.TypeOf(model)
-	if kind := typeOf.Kind(); kind != reflect.Ptr {
-		panic("target struct is not pointer type")
+	typeOf := reflect.TypeOf(target)
+	valueOf := reflect.ValueOf(target)
+
+	if typeOf.Kind() == reflect.Ptr {
+		valueOf = valueOf.Elem()
 	}
 
-	valueOf := reflect.ValueOf(model).Elem()
 	if _, ok := valueOf.Type().FieldByName(fieldName); !ok {
 		return "", "", errors.New("fieldname not exists")
 	}
@@ -134,8 +141,8 @@ func (s *ReflectFunc) Call(key string, args ...interface{}) ([]reflect.Value, er
 		return nil, errors.New("func name not exists")
 	}
 
-	valueOf := reflect.ValueOf(fn)
-	if len(args) != valueOf.Type().NumIn() {
+	fnValue := reflect.ValueOf(fn)
+	if len(args) != fnValue.Type().NumIn() {
 		return nil, errors.New("func params not match")
 	}
 
@@ -144,32 +151,7 @@ func (s *ReflectFunc) Call(key string, args ...interface{}) ([]reflect.Value, er
 		in[i] = reflect.ValueOf(v)
 	}
 
-	return valueOf.Call(in), nil
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 获取字段数
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Reflect) NumField() int {
-	if !s.IsStruct() {
-		return 0
-	}
-
-	return s.typeOf.NumField()
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 获取方法数
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Reflect) NumMethod() int {
-	return s.typeOf.NumMethod()
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 根据索引获取字段reflect.StructTag
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Reflect) Tag(index int) reflect.StructTag {
-	return s.typeOf.Field(index).Tag
+	return fnValue.Call(in), nil
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -202,133 +184,86 @@ func (s *Reflect) SetField(name string, value interface{}) error {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 根据索引获取字段reflect.Value
+ * 根据字段索引获取reflect.Value
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) Field(index int) (fieldValue reflect.Value, er error) {
-	defer func() {
-		if err := recover(); err != nil {
-			if err, ok := err.(error); ok {
-				er = err
-			} else {
-				er = errors.New("field not found")
-			}
-		}
-	}()
-
-	fieldValue = s.valueOf.Field(index)
-
-	return fieldValue, er
+	return s.FieldByIndex([]int{index})
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 根据索引链获取字段reflect.Value
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Reflect) FieldByIndex(index []int) (fieldValue reflect.Value, er error) {
-	defer func() {
-		if err := recover(); err != nil {
-			if err, ok := err.(error); ok {
-				er = err
-			} else {
-				er = errors.New("field not found")
-			}
-		}
-	}()
-
-	fieldValue = s.valueOf.FieldByIndex(index)
-
-	return fieldValue, er
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 根据名称获取字段字段reflect.Value
+ * 根据字段名称获取reflect.Value
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) FieldByName(name string) (reflect.Value, error) {
-	if !s.IsStruct() {
-		return reflect.Value{}, errors.New("not struct ")
+	if fieldType, isOk := s.valueOf.Type().FieldByName(name); isOk {
+		return s.FieldByIndex(fieldType.Index)
 	}
 
-	_, ok := s.valueOf.Type().FieldByName(name)
-	if !ok {
-		return reflect.Value{}, errors.New("not found fileld")
-	}
-
-	return s.valueOf.FieldByName(name), nil
+	return reflect.Value{}, errors.New("field name not found")
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 根据索引获取字段*FieldInfo
+ * 根据字段索引链获取reflect.Value
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) FieldByIndex(indexs []int) (fieldValue reflect.Value, er error) {
+	defer func() {
+		if err := recover(); err != nil {
+			if err, ok := err.(error); ok {
+				er = err
+			} else {
+				er = errors.New("field not found")
+			}
+		}
+	}()
+
+	fieldValue = s.valueOf.FieldByIndex(indexs)
+
+	return fieldValue, er
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 根据字段索引获取FieldInfo
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) FieldInfo(index int) (fieldInfo *FieldInfo, er error) {
-	defer func() {
-		if err := recover(); err != nil {
-			if err, ok := err.(error); ok {
-				er = err
-			} else {
-				er = errors.New("field not found")
-			}
-		}
-	}()
-
-	field := s.valueOf.Field(index)
-
-	fieldInfo = &FieldInfo{
-		Index:     []int{index},
-		Name:      s.typeOf.Field(index).Name,
-		Type:      fmt.Sprintf("%s", s.typeOf.Field(index).Type),
-		Value:     field,
-		Interface: field.Interface(),
-	}
-
-	return fieldInfo, er
+	return s.FieldInfoByIndex([]int{index})
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 根据索引链获取字段*FieldInfo
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Reflect) FieldInfoByIndex(index []int) (fieldInfo *FieldInfo, er error) {
-	defer func() {
-		if err := recover(); err != nil {
-			if err, ok := err.(error); ok {
-				er = err
-			} else {
-				er = errors.New("field not found")
-			}
-		}
-	}()
-
-	fieldValue := s.valueOf.FieldByIndex(index)
-	fieldType := s.valueOf.Type().FieldByIndex(index)
-
-	fieldInfo = &FieldInfo{
-		Index:     index,
-		Name:      fieldType.Name,
-		Type:      fmt.Sprintf("%s", fieldType.Type),
-		Value:     fieldValue,
-		Interface: fieldValue.Interface(),
-	}
-
-	return fieldInfo, nil
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 根据名称获取字段*FieldInfo
+ * 根据字段名称获取FieldInfo
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) FieldInfoByName(name string) (*FieldInfo, error) {
-	if !s.IsStruct() {
-		return nil, errors.New("not struct ")
+	if fieldType, isOk := s.valueOf.Type().FieldByName(name); isOk {
+		return s.FieldInfoByIndex(fieldType.Index)
 	}
 
-	field, ok := s.valueOf.Type().FieldByName(name)
-	if !ok {
-		return nil, errors.New("not found fileld")
-	}
+	return nil, errors.New("not found fileld")
+}
 
-	fieldInfo := &FieldInfo{
-		Index:     field.Index,
-		Name:      field.Name,
-		Type:      fmt.Sprintf("%s", field.Type),
-		Value:     s.valueOf.FieldByName(name),
-		Interface: s.valueOf.FieldByName(name).Interface(),
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 根据字段索引链获取*FieldInfo
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) FieldInfoByIndex(indexs []int) (fieldInfo *FieldInfo, er error) {
+	defer func() {
+		if err := recover(); err != nil {
+			if err, ok := err.(error); ok {
+				er = err
+			} else {
+				er = errors.New("field not found")
+			}
+		}
+	}()
+
+    //fieldType := s.valueOf.Type().FieldByIndex(indexs)
+    fieldType := s.typeOf.FieldByIndex(indexs)
+	fieldValue := s.valueOf.FieldByIndex(indexs)
+
+	fieldInfo = &FieldInfo{
+		Index:     indexs,
+		Name:      fieldType.Name,
+		Kind:      fmt.Sprintf("%s", fieldType.Type.Kind()),
+		Type:      fmt.Sprintf("%s", fieldType.Type),
+		Value:     fieldValue,
+		Tag:       fieldType.Tag,
+		//Interface: fieldValue.Interface(),
 	}
 
 	return fieldInfo, nil
@@ -346,23 +281,22 @@ func (s *Reflect) Fields() ([]*FieldInfo, error) {
 	var err error
 
 	for i := 0; i < s.typeOf.NumField(); i++ {
-		field := s.typeOf.Field(i)
-
-		tagMap := make(map[string]interface{}, 0)
-		tagMap["json"] = field.Tag.Get("json")
+		fieldType := s.typeOf.Field(i)
+		fieldValue := s.valueOf.Field(i)
 
 		fieldInfo := &FieldInfo{
-			Index: field.Index,
-			Name:  field.Name,
-			Type:  fmt.Sprintf("%s", field.Type),
-			Tag:   tagMap,
+			Index: fieldType.Index,
+			Name:  fieldType.Name,
+			Kind:  fmt.Sprintf("%s", fieldType.Type.Kind()),
+			Type:  fmt.Sprintf("%s", fieldType.Type),
+			Tag:   fieldType.Tag,
 		}
 
-		if field.Type.Kind() == reflect.Struct {
-			s.fieldChilds(fieldInfo.Index, fieldInfo, field)
+		if fieldType.Type.Kind() == reflect.Struct {
+			s.fieldChilds(fieldInfo.Index, fieldInfo, fieldType)
 		} else {
-			fieldInfo.Value = s.valueOf.Field(i)
-			fieldInfo.Interface = s.valueOf.Field(i).Interface()
+			fieldInfo.Value = fieldValue
+			fieldInfo.Interface = fieldValue.Interface()
 		}
 
 		fieldInfos = append(fieldInfos, fieldInfo)
@@ -375,55 +309,51 @@ func (s *Reflect) Fields() ([]*FieldInfo, error) {
  * 遍历字段子集
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) fieldChilds(indexs []int, fieldInfo *FieldInfo, field reflect.StructField) {
-	if field.Type.Kind() == reflect.Struct {
-		for j := 0; j < field.Type.NumField(); j++ {
-			indexs := append(indexs, j)
-			newField := s.typeOf.FieldByIndex(indexs)
+	for j := 0; j < field.Type.NumField(); j++ {
+		indexs := append(indexs, j)
+		newField := s.typeOf.FieldByIndex(indexs)
 
-			newFieldInfo := &FieldInfo{
-				Index: indexs,
-				Name:  newField.Name,
-				Type:  fmt.Sprintf("%s", newField.Type),
-			}
-
-			if newField.Type.Kind() == reflect.Struct {
-				s.fieldChilds(indexs, newFieldInfo, newField)
-			} else {
-				newFieldInfo.Value = s.valueOf.FieldByIndex(indexs)
-				//newFieldInfo.Interface = s.valueOf.FieldByIndex(indexs).Interface()
-			}
-
-			fieldInfo.Childs = append(fieldInfo.Childs, newFieldInfo)
+		newFieldInfo := &FieldInfo{
+			Index: indexs,
+			Name:  newField.Name,
+			Kind: fmt.Sprintf("%s", newField.Type.Kind()),
+			Type:  fmt.Sprintf("%s", newField.Type),
 		}
+
+		if newField.Type.Kind() == reflect.Struct {
+			s.fieldChilds(indexs, newFieldInfo, newField)
+		} else {
+			newFieldInfo.Value = s.valueOf.FieldByIndex(indexs)
+			//newFieldInfo.Interface = s.valueOf.FieldByIndex(indexs).Interface()
+		}
+
+		fieldInfo.Childs = append(fieldInfo.Childs, newFieldInfo)
 	}
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 根据索引获取方法reflect.Value
+ * 根据方法索引获取reflect.Value
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) Method(index int) (reflect.Value, error) {
-	var err error
 	v := s.valueOf.Method(index)
+
 	if !v.IsValid() {
-		err = errors.New("fileld is valid")
+		return v, errors.New("method is valid")
 	}
-	return v, err
+
+	return v, nil
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 根据名称获取方法reflect.Value
+ * 根据方法名称获取reflect.Value
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) MethodByName(name string) (reflect.Value, error) {
-	var err error
-	v := s.valueOf.MethodByName(name)
-	if !v.IsValid() {
-		err = errors.New("fileld is valid")
-	}
-	return v, err
+    methodTypeOf, _ := s.typeOf.MethodByName(name)
+    return s.Method(methodTypeOf.Index)
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 根据名称获取方法*MethodInfo
+ * 根据方法名称获取*MethodInfo
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) MethodInfoByName(name string) (*MethodInfo, error) {
 	var err error
@@ -432,14 +362,13 @@ func (s *Reflect) MethodInfoByName(name string) (*MethodInfo, error) {
 		return nil, errors.New("method is valid")
 	}
 
-	mTypeOf, _ := s.typeOf.MethodByName(name)
-
+	methodTypeOf, _ := s.typeOf.MethodByName(name)
 	numIn := method.Type().NumIn()
 	numOut := method.Type().NumOut()
 
 	methodInfo := &MethodInfo{
-		Index:  mTypeOf.Index,
-		Name:   mTypeOf.Name,
+		Index:  methodTypeOf.Index,
+		Name:   methodTypeOf.Name,
 		Value:  method,
 		NumIn:  numIn,
 		NumOut: numOut,
@@ -535,13 +464,6 @@ func (s *Reflect) Invoke(methodName string, args ...interface{}) ([]reflect.Valu
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 对象信息
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Reflect) Interfce() interface{} {
-	return s.target
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 类型信息
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) Type() reflect.Type {
@@ -556,10 +478,53 @@ func (s *Reflect) Value() reflect.Value {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 类型类别
+ * 获取底层类型
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) Kind() reflect.Kind {
 	return s.typeOf.Kind()
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 根据索引获取字段reflect.StructTag
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) Tag(index int) reflect.StructTag {
+	return s.typeOf.Field(index).Tag
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取字段数
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) NumField() int {
+	if !s.IsStruct() {
+		return 0
+	}
+
+	return s.typeOf.NumField()
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 获取方法数
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) NumMethod() int {
+	return s.rawTypeOf.NumMethod()
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 对象信息
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) Interface() interface{} {
+	return s.target
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 长度
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) Len() int {
+	if s.IsSlice() || s.IsArray() {
+        return s.valueOf.Len()
+	}
+
+	return 0
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -580,13 +545,13 @@ func (s *Reflect) Dump() string {
 			fieldName := fieldInfo.Name
 			fieldValue := fieldInfo.Value
 
-			if jsonName, isOk := fieldInfo.Tag["json"]; isOk {
-				fieldName = jsonName.(string)
-			}
+			if jsonName, isOk := fieldInfo.Tag.Lookup("json"); isOk {
+				fieldName = jsonName
 
-			if fieldName != "-" {
-				info := fmt.Sprintf("%s:%v", fieldName, fieldValue)
-				dumps = append(dumps, info)
+			    if fieldName != "-" {
+				    info := fmt.Sprintf("%s:%v", fieldName, fieldValue)
+				    dumps = append(dumps, info)
+			    }
 			}
 		}
 	}
@@ -609,13 +574,6 @@ func (s *Reflect) Dump() string {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 是否切片对象
- * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Reflect) IsSlice() bool {
-	return s.typeOf.Kind() == reflect.Slice
-}
-
-/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 是否结构对象
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) IsStruct() bool {
@@ -623,28 +581,78 @@ func (s *Reflect) IsStruct() bool {
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 判断是否实现了 u 接口。
+ * 是否数组对象
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Reflect) IsImplements(u reflect.Type) bool {
-	return s.typeOf.Implements(u)
+func (s *Reflect) IsArray() bool {
+	return s.typeOf.Kind() == reflect.Array
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 判断类型的值可否转换为 u 类型
+ * 是否切片对象
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Reflect) IsConvertibleTo(u reflect.Type) bool {
-	return s.typeOf.ConvertibleTo(u)
+func (s *Reflect) IsSlice() bool {
+	return s.typeOf.Kind() == reflect.Slice
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 判断类型的值可否赋值给 u 类型
+ * 是否Map对象
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-func (s *Reflect) IsAssignableTo(u reflect.Type) bool {
-	return s.typeOf.AssignableTo(u)
+func (s *Reflect) IsMap() bool {
+	return s.typeOf.Kind() == reflect.Map
 }
 
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * 判断类型的值可否进行比较操作
+ * 是否func对象
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) IsFunc() bool {
+	return s.typeOf.Kind() == reflect.Func
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 是否ptr对象
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) IsPtr() bool {
+	return s.rawTypeOf.Kind() == reflect.Ptr
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 判断是否实现指定接口。
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) IsImplements(inter interface{}) bool {
+	interTypeOf := reflect.TypeOf(inter)
+	if interTypeOf.Kind() == reflect.Ptr {
+		interTypeOf = interTypeOf.Elem()
+	}
+
+	return s.typeOf.Implements(interTypeOf)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 判断类型的值可否转换为指定类型
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) IsConvertibleTo(inter interface{}) bool {
+	interTypeOf := reflect.TypeOf(inter)
+	if interTypeOf.Kind() == reflect.Ptr {
+		interTypeOf = interTypeOf.Elem()
+	}
+
+	return s.typeOf.ConvertibleTo(interTypeOf)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 判断类型的值可否赋值给指定类型
+ * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+func (s *Reflect) IsAssignableTo(inter interface{}) bool {
+	interTypeOf := reflect.TypeOf(inter)
+	if interTypeOf.Kind() == reflect.Ptr {
+		interTypeOf = interTypeOf.Elem()
+	}
+
+	return s.typeOf.AssignableTo(interTypeOf)
+}
+
+/* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * 判断类型可否进行比较操作
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 func (s *Reflect) IsComparable() bool {
 	return s.typeOf.Comparable()

@@ -1,5 +1,6 @@
 package glib
 
+/*
 import (
 	"bytes"
 	"errors"
@@ -10,6 +11,7 @@ import (
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/qr"
 )
+*/
 
 /* ================================================================================
  * QR
@@ -21,6 +23,7 @@ import (
 /* ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * 获取二维码图片
  * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/*
 func QrCode(content string, args ...int) ([]byte, error) {
 	if len(content) == 0 {
 		return nil, errors.New("qr content is empty")
@@ -59,3 +62,5 @@ func QrCode(content string, args ...int) ([]byte, error) {
 
 	return dataBuf.Bytes(), nil
 }
+*/
+
