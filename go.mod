@@ -1,3 +1,3 @@
-module github.com/sanxia/glib
+module github.com/EastWoodYang/glib
 
 go 1.16
